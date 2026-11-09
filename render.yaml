@@ -1,0 +1,14 @@
+# Blueprint do Render para o servidor do jogo (opção gratuita).
+# No painel: New > Blueprint > escolha este repositório.
+services:
+  - type: web
+    name: pergunta-oculta-server
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: CORS_ORIGIN
+        sync: false # você preenche no painel com o endereço do front na Vercel

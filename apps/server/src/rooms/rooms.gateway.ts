@@ -21,9 +21,9 @@ import {
   type Ack,
   type RoomConfig,
 } from '@po/shared';
+import { corsOrigin, isOriginAllowed } from '../cors';
 import { RoomsService, type GameServer, type GameSocket } from './rooms.service';
 
-const corsOrigin = process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()) ?? true;
 
 /** Valida o payload com zod. Devolve os dados ou o erro pronto para o callback. */
 function parse<T>(schema: ZodType<T>, body: unknown): { ok: true; data: T } | { ok: false; ack: Ack<never> } {
@@ -39,7 +39,10 @@ const limited: Ack<never> = { ok: false, code: 'RATE_LIMITED', message: 'Calma! 
  * Porta de entrada dos eventos. Cada handler: limite de envios, validação do payload,
  * e delega para o RoomsService. O valor retornado vira o callback de confirmação.
  */
-@WebSocketGateway({ cors: { origin: corsOrigin } })
+@WebSocketGateway({
+  cors: { origin: corsOrigin() },
+  allowRequest: (req, done) => done(null, isOriginAllowed(req.headers.origin)),
+})
 export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
   // @Inject explícito: funciona também sem emitDecoratorMetadata (ex.: nos testes com Vitest).
   constructor(@Inject(RoomsService) private readonly rooms: RoomsService) {}

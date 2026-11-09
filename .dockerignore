@@ -1,0 +1,7 @@
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+.git
+apps/web/e2e
+**/*.log

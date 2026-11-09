@@ -38,7 +38,11 @@ Teste de ponta a ponta no navegador (três celulares jogando uma rodada do Banco
 pnpm e2e   # precisa do playwright instalado: pnpm add -Dw playwright && npx playwright install chromium
 ```
 
-Variáveis: copie `apps/web/.env.example` para `apps/web/.env`. No servidor, `PORT` e `CORS_ORIGIN` (lista separada por vírgula).
+Variáveis: copie `apps/web/.env.example` para `apps/web/.env`. No servidor, `PORT` e `CORS_ORIGIN` (lista separada por vírgula; vazia libera qualquer origem).
+
+## Deploy
+
+Front na Vercel, servidor no Render (grátis) ou no Fly.io. Passo a passo completo em [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Andamento
 
@@ -48,7 +52,7 @@ Variáveis: copie `apps/web/.env.example` para `apps/web/.env`. No servidor, `PO
 - [x] Fase 3: front do modo Banco (início, lobby com regras, jogo, fim de jogo, jogar de novo)
 - [x] Fase 4: front do modo Mestre e Misto (editor da pergunta com prévia dos quadrados, julgamento, ponto extra julgado pelo mestre)
 - [x] Fase 5: reconexão com token, pausa automática com menos de 2 conectados, vez pula quem caiu, mestre offline cede a rodada em 30 s, troca de dono, limpeza de salas, limite de envios
-- [ ] Fase 6: deploy (Vercel + Fly.io ou Render)
+- [x] Fase 6 (preparação): `Dockerfile`, `fly.toml`, `render.yaml`, `apps/web/vercel.json` e o passo a passo em [docs/DEPLOY.md](docs/DEPLOY.md). Falta só subir nas contas.
 
 ## Front
 
