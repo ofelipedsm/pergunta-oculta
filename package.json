@@ -15,6 +15,7 @@
     "e2e": "node apps/web/e2e/play.mjs"
   },
   "devDependencies": {
+    "playwright": "1.63.0",
     "prettier": "^3.3.3",
     "typescript": "~5.6.3"
   },

@@ -78,6 +78,21 @@ try {
   await caio.page.click('[data-test=room-join]')
   await ana.page.waitForFunction(() => document.querySelectorAll('.list li').length === 3)
   step('Bia entrou pelo código e Caio pelo link')
+  // ---------------- convite: copiar, WhatsApp e QR code
+  const link = `${WEB}/sala/${code}`
+  const wa = await ana.page.getAttribute('[data-test=whatsapp]', 'href')
+  if (!wa.startsWith('https://wa.me/?text=') || !decodeURIComponent(wa).includes(link)) {
+    throw new Error(`Link do WhatsApp inesperado: ${wa}`)
+  }
+  await ana.ctx.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await ana.page.click('[data-test=copy-link]')
+  await ana.page.waitForSelector('[data-test=copy-link]:has-text("Copiado!")')
+  const copiedText = await ana.page.evaluate(() => navigator.clipboard.readText())
+  if (copiedText !== link) throw new Error(`Link copiado inesperado: ${copiedText}`)
+  await ana.page.click('[data-test=toggle-qr]')
+  await ana.page.waitForSelector('[data-test=qr] svg')
+  if (SHOTS) await ana.page.locator('[data-test=qr] .qr-img').screenshot({ path: `${SHOTS}/qr.png` })
+  step('Convite: link copiado, WhatsApp com o link e QR code na tela')
   await shot(ana, '01-lobby-dono')
   await shot(bia, '02-lobby-convidado')
 

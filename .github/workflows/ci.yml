@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Testes, tipos e build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  e2e:
+    name: Partida no navegador (3 jogadores)
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Build
+        run: |
+          pnpm build:packages
+          pnpm --filter @po/server build
+          VITE_SERVER_URL=http://localhost:3000 pnpm --filter @po/web build-only
+      - name: Sobe servidor e front
+        run: |
+          (cd apps/server && PORT=3000 node dist/main.js > ../../server.log 2>&1 &)
+          (cd apps/web && pnpm exec vite preview --port 4173 --strictPort > ../../web.log 2>&1 &)
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/health > /dev/null && curl -sf http://localhost:4173 > /dev/null && exit 0
+            sleep 1
+          done
+          echo "Servidor ou front não subiu"; cat server.log web.log; exit 1
+      - name: Joga a partida
+        run: mkdir -p shots && WEB_URL=http://localhost:4173 SHOTS_DIR=shots pnpm e2e
+      - name: Capturas de tela
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-capturas
+          path: |
+            shots/
+            server.log
+            web.log
+          if-no-files-found: ignore

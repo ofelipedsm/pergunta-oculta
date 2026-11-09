@@ -21,6 +21,8 @@ packages/
 
 O servidor é a única fonte da verdade. O celular recebe só `room:state`, montado por `toPublicState(room, viewerId)`, que nunca inclui pergunta ou respostas para quem está adivinhando.
 
+[![CI](https://github.com/ofelipedsm/pergunta-oculta/actions/workflows/ci.yml/badge.svg)](https://github.com/ofelipedsm/pergunta-oculta/actions/workflows/ci.yml)
+
 ## Rodando
 
 Requisitos: Node 22+ e pnpm 10.
@@ -35,10 +37,17 @@ pnpm dev         # front em http://localhost:5173 e servidor em http://localhost
 Teste de ponta a ponta no navegador (três celulares jogando uma rodada do Banco e uma do Mestre). Com o servidor em `:3000` e o front em `:4173` (`pnpm --filter @po/web build && pnpm --filter @po/web preview`):
 
 ```bash
-pnpm e2e   # precisa do playwright instalado: pnpm add -Dw playwright && npx playwright install chromium
+pnpm exec playwright install chromium   # só na primeira vez
+pnpm e2e
 ```
 
 Variáveis: copie `apps/web/.env.example` para `apps/web/.env`. No servidor, `PORT` e `CORS_ORIGIN` (lista separada por vírgula; vazia libera qualquer origem).
+
+## CI
+
+O GitHub Actions roda a cada push na `main` e em cada pull request:
+1. **Testes, tipos e build** de todos os pacotes.
+2. **Partida no navegador:** sobe servidor e front e joga com três navegadores (convite, modo Banco, reconexão, modo Mestre). As capturas de tela ficam nos artefatos da execução.
 
 ## Deploy
 
@@ -59,7 +68,8 @@ Front na Vercel, servidor no Render (grátis) ou no Fly.io. Passo a passo comple
 - `src/socket.ts`: conexão única, reconecta sozinha.
 - `src/stores/room.ts`: guarda o `room:state` e transforma toques em eventos. Nenhuma regra mora no front.
 - `src/session.ts`: código da sala, `playerId` e `token` no `localStorage`. Recarregar a página ou perder a rede devolve o jogador à partida.
-- Rotas: `/` (criar ou entrar) e `/sala/:code` (lobby, jogo e fim). O link da sala pode ser compartilhado direto.
+- Rotas: `/` (criar ou entrar) e `/sala/:code` (lobby, jogo e fim).
+- Convite no lobby: copiar o link, mandar pelo WhatsApp (mensagem pronta), compartilhar pelo menu do celular ou mostrar um QR code para os amigos apontarem a câmera.
 - `vercel.json` já reescreve qualquer rota para o `index.html`.
 
 ## Servidor em tempo real
