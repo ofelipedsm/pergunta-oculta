@@ -23,6 +23,7 @@ export function toPublicState(room: Room, viewerId: string, judgeId?: string): P
       phase: r.phase,
       wordCount: r.words.length,
       words: r.words.map((w, i) => (ended || isMaster || r.revealed.includes(i) ? w : null)),
+      revealed: [...r.revealed],
       turnPlayerId: r.turnPlayerId,
       lastOpened: r.lastOpened,
       deadline: r.deadline,

@@ -32,17 +32,31 @@ pnpm typecheck
 pnpm dev         # front em http://localhost:5173 e servidor em http://localhost:3000
 ```
 
+Teste de ponta a ponta no navegador (três celulares jogando uma rodada do Banco e uma do Mestre). Com o servidor em `:3000` e o front em `:4173` (`pnpm --filter @po/web build && pnpm --filter @po/web preview`):
+
+```bash
+pnpm e2e   # precisa do playwright instalado: pnpm add -Dw playwright && npx playwright install chromium
+```
+
 Variáveis: copie `apps/web/.env.example` para `apps/web/.env`. No servidor, `PORT` e `CORS_ORIGIN` (lista separada por vírgula).
 
 ## Andamento
 
 - [x] Fase 0: monorepo, pacotes `shared` e `question-bank`, esqueleto do server e do web
 - [x] Fase 1: núcleo do jogo (`apps/server/src/game`), com testes dos três modos, julgamento, ponto extra, timeouts, saída de jogadores e visibilidade do estado
-- [x] Fase 2: `RoomsGateway` + `RoomsService` (Socket.IO, salas em memória, cronômetro por sala, troca de dono, limpeza de salas, limite de 5 eventos/s), com testes de integração usando clientes Socket.IO reais
-- [ ] Fase 3: front do modo Banco
-- [ ] Fase 4: front do modo Mestre e Misto
+- [x] Fase 2: `RoomsGateway` + `RoomsService` (Socket.IO, salas em memória, cronômetro por sala, troca de dono, limpeza de salas, limite de 10 eventos/s), com testes de integração usando clientes Socket.IO reais
+- [x] Fase 3: front do modo Banco (início, lobby com regras, jogo, fim de jogo, jogar de novo)
+- [x] Fase 4: front do modo Mestre e Misto (editor da pergunta com prévia dos quadrados, julgamento, ponto extra julgado pelo mestre)
 - [ ] Fase 5: reconexão, limites de envio, limpeza de salas
 - [ ] Fase 6: deploy (Vercel + Fly.io ou Render)
+
+## Front
+
+- `src/socket.ts`: conexão única, reconecta sozinha.
+- `src/stores/room.ts`: guarda o `room:state` e transforma toques em eventos. Nenhuma regra mora no front.
+- `src/session.ts`: código da sala, `playerId` e `token` no `localStorage`. Recarregar a página ou perder a rede devolve o jogador à partida.
+- Rotas: `/` (criar ou entrar) e `/sala/:code` (lobby, jogo e fim). O link da sala pode ser compartilhado direto.
+- `vercel.json` já reescreve qualquer rota para o `index.html`.
 
 ## Servidor em tempo real
 

@@ -33,7 +33,7 @@ export const DEFAULT_ROOMS_OPTIONS: RoomsServiceOptions = {
   hostGraceMs: 30_000,
   idleRoomMs: 30 * 60_000,
   sweepEveryMs: 60_000,
-  maxEventsPerSecond: 5,
+  maxEventsPerSecond: 10,
 };
 
 const err = (code: ErrorCode, message: string): Ack<never> => ({ ok: false, code, message });

@@ -111,8 +111,10 @@ export interface PublicRound {
   level?: Level;
   phase: RoundPhase;
   wordCount: number;
-  /** Palavra aberta ou null quando escondida. */
+  /** Palavra aberta ou null quando escondida. O mestre recebe todas. */
   words: (string | null)[];
+  /** Índices das palavras já abertas na rodada. */
+  revealed: number[];
   turnPlayerId?: string;
   lastOpened?: number;
   /** Epoch ms do prazo da fase atual, só para desenhar o cronômetro. */

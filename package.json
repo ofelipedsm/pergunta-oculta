@@ -11,7 +11,8 @@
     "build": "pnpm -r build",
     "test": "pnpm build:packages && pnpm -r test",
     "typecheck": "pnpm build:packages && pnpm -r typecheck",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "e2e": "node apps/web/e2e/play.mjs"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
