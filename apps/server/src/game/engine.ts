@@ -325,6 +325,20 @@ export class GameEngine {
     return { ok: true, toasts: [{ kind: 'info', text: 'Fim de jogo!' }], data: undefined };
   }
 
+  /** Depois do fim de jogo: volta ao lobby com os mesmos jogadores e pontos zerados. */
+  restart(room: Room, actorId: string): EngineResult {
+    const check = this.requireHost(room, actorId) ?? this.requireRoomPhase(room, 'ended');
+    if (check) return check;
+    room.players = room.players.filter((p) => !p.left);
+    for (const p of room.players) p.score = 0;
+    room.phase = 'lobby';
+    room.round = undefined;
+    room.winnerIds = undefined;
+    room.roundCount = 0;
+    this.touch(room);
+    return { ok: true, toasts: [], data: undefined };
+  }
+
   /** Chamado pelo serviço quando round.deadline vence. Devolve null se não havia nada vencido. */
   onTimeout(room: Room): Toast[] | null {
     const r = room.round;

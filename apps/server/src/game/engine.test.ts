@@ -369,6 +369,22 @@ describe('modo Misto', () => {
   });
 });
 
+describe('jogar de novo', () => {
+  it('volta ao lobby com pontos zerados, sem quem saiu', () => {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine);
+    ok(engine.start(room, ids[0]!));
+    ok(engine.leave(room, ids[2]!));
+    ok(engine.endGame(room, ids[0]!));
+    expect(engine.restart(room, ids[1]!)).toMatchObject({ ok: false, code: 'NOT_HOST' });
+    ok(engine.restart(room, ids[0]!));
+    expect(room.phase).toBe('lobby');
+    expect(room.players.map((p) => p.id)).toEqual([ids[0], ids[1]]);
+    expect(room.players.every((p) => p.score === 0)).toBe(true);
+    expect(room.round).toBeUndefined();
+  });
+});
+
 describe('saída de jogadores', () => {
   it('jogador da vez sai: a vez passa', () => {
     const { engine } = setup();

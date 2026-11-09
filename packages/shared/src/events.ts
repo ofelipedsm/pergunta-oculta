@@ -43,6 +43,7 @@ export interface ClientToServerEvents {
   'room:kick': (input: { playerId: string }, ack: AckFn) => void;
   'game:start': (ack: AckFn) => void;
   'game:end': (ack: AckFn) => void;
+  'game:restart': (ack: AckFn) => void;
   'master:submit': (input: MasterSubmitInput, ack: AckFn) => void;
   'round:open': (input: { index: number }, ack: AckFn) => void;
   'round:guess': (input: { text: string }, ack: AckFn) => void;

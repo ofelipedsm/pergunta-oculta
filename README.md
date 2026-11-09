@@ -13,6 +13,7 @@ apps/
   web/              Vue 3 + Vite + Pinia (front, vai para a Vercel)
   server/           NestJS + Socket.IO (servidor do jogo, uma instância)
     src/game/       regras do jogo em TypeScript puro, com testes
+    src/rooms/      gateway Socket.IO + serviço das salas em memória
 packages/
   shared/           tipos, contrato de eventos, schemas zod, normalização de respostas
   question-bank/    313 perguntas. Só o server importa: as respostas nunca vão para o front
@@ -37,11 +38,20 @@ Variáveis: copie `apps/web/.env.example` para `apps/web/.env`. No servidor, `PO
 
 - [x] Fase 0: monorepo, pacotes `shared` e `question-bank`, esqueleto do server e do web
 - [x] Fase 1: núcleo do jogo (`apps/server/src/game`), com testes dos três modos, julgamento, ponto extra, timeouts, saída de jogadores e visibilidade do estado
-- [ ] Fase 2: `RoomsGateway` + `RoomsService` (Socket.IO, salas em memória, cronômetro por sala)
+- [x] Fase 2: `RoomsGateway` + `RoomsService` (Socket.IO, salas em memória, cronômetro por sala, troca de dono, limpeza de salas, limite de 5 eventos/s), com testes de integração usando clientes Socket.IO reais
 - [ ] Fase 3: front do modo Banco
 - [ ] Fase 4: front do modo Mestre e Misto
 - [ ] Fase 5: reconexão, limites de envio, limpeza de salas
 - [ ] Fase 6: deploy (Vercel + Fly.io ou Render)
+
+## Servidor em tempo real
+
+- Eventos e payloads: `packages/shared/src/events.ts`. Todo evento responde pelo callback com `{ ok: true }` ou `{ ok: false, code, message }`.
+- Depois de qualquer mudança, cada celular recebe `room:state` com o que ele pode ver, e a sala recebe `room:toast` com avisos curtos.
+- Um cronômetro por sala, sempre no prazo da fase (`round.deadline`). Quando vence, o servidor chama `engine.onTimeout()`.
+- Dono desconectado por 30 s: a posse passa para o próximo jogador conectado.
+- Sala sem ninguém conectado por 30 min é removida.
+- `game:restart` (dono, depois do fim de jogo) volta ao lobby com os mesmos jogadores e pontos zerados.
 
 ## Regras que o núcleo já aplica
 
