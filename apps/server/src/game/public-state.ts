@@ -42,6 +42,7 @@ export function toPublicState(room: Room, viewerId: string, judgeId?: string): P
     me: { id: viewerId, isHost: room.hostId === viewerId, isMaster },
     hostId: room.hostId,
     phase: room.phase,
+    paused: !!room.paused,
     config: { ...room.config, categories: [...room.config.categories], levels: [...room.config.levels] },
     players: room.players.map((p) => ({
       id: p.id,

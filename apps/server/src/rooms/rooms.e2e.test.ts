@@ -209,6 +209,39 @@ describe('servidor em tempo real', () => {
   });
 });
 
+describe('limpeza de salas', () => {
+  it('remove só salas sem ninguém conectado há mais tempo que o limite', () => {
+    const svc = new RoomsService({}, { idleRoomMs: 1000, sweepEveryMs: 1_000_000 });
+    const fake = () => ({ data: {}, join: () => undefined, leave: () => undefined }) as never;
+    const a = svc.create(fake(), 'Ana');
+    const b = svc.create(fake(), 'Bia');
+    if (!a.ok || !b.ok) throw new Error('falhou ao criar');
+    const roomA = svc.getRoom(a.data.code)!;
+    roomA.players[0]!.connected = false;
+    const later = Date.now() + 5000;
+    svc.sweep(later);
+    expect(svc.getRoom(a.data.code)).toBeUndefined();
+    expect(svc.getRoom(b.data.code)).toBeDefined(); // Bia continua conectada
+    svc.onModuleDestroy();
+  });
+});
+
+describe('pausa pelo socket', () => {
+  it('pausa quando sobra 1 conectado e retoma quando o outro volta', async () => {
+    const ana = await connect();
+    const bia = await connect();
+    const sAna = await call<Session>(ana, 'room:create', { name: 'Ana' });
+    const sBia = await call<Session>(bia, 'room:join', { code: sAna.code, name: 'Bia' });
+    await call(ana, 'game:start');
+    bia.disconnect();
+    await until(ana, (s) => s.paused === true);
+    const bia2 = await connect();
+    await call(bia2, 'room:join', { code: sAna.code, playerId: sBia.playerId, token: sBia.token });
+    const s = await until(ana, (st) => st.paused === false);
+    expect(s.round?.deadline).toBeGreaterThan(Date.now());
+  });
+});
+
 describe('limite de envios', () => {
   it('recusa rajadas acima do limite', () => {
     const svc = new RoomsService({}, { maxEventsPerSecond: 5, sweepEveryMs: 1_000_000 });

@@ -164,9 +164,9 @@ export class RoomsService implements OnModuleDestroy {
     if (!room) return;
     const stillOnline = this.socketsOf(code, playerId).some((s) => s.id !== socket.id);
     if (stillOnline) return;
-    this.engine.setConnected(room, playerId, false);
+    const toasts = this.engine.setConnected(room, playerId, false);
     if (room.hostId === playerId) this.startHostTimer(room);
-    this.broadcast(room);
+    this.afterChange(room, toasts);
   }
 
   // ---------------------------------------------------------------- ações do jogo

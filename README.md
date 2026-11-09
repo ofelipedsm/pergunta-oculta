@@ -47,7 +47,7 @@ Variáveis: copie `apps/web/.env.example` para `apps/web/.env`. No servidor, `PO
 - [x] Fase 2: `RoomsGateway` + `RoomsService` (Socket.IO, salas em memória, cronômetro por sala, troca de dono, limpeza de salas, limite de 10 eventos/s), com testes de integração usando clientes Socket.IO reais
 - [x] Fase 3: front do modo Banco (início, lobby com regras, jogo, fim de jogo, jogar de novo)
 - [x] Fase 4: front do modo Mestre e Misto (editor da pergunta com prévia dos quadrados, julgamento, ponto extra julgado pelo mestre)
-- [ ] Fase 5: reconexão, limites de envio, limpeza de salas
+- [x] Fase 5: reconexão com token, pausa automática com menos de 2 conectados, vez pula quem caiu, mestre offline cede a rodada em 30 s, troca de dono, limpeza de salas, limite de envios
 - [ ] Fase 6: deploy (Vercel + Fly.io ou Render)
 
 ## Front
@@ -64,6 +64,8 @@ Variáveis: copie `apps/web/.env.example` para `apps/web/.env`. No servidor, `PO
 - Depois de qualquer mudança, cada celular recebe `room:state` com o que ele pode ver, e a sala recebe `room:toast` com avisos curtos.
 - Um cronômetro por sala, sempre no prazo da fase (`round.deadline`). Quando vence, o servidor chama `engine.onTimeout()`.
 - Dono desconectado por 30 s: a posse passa para o próximo jogador conectado.
+- Menos de 2 jogadores conectados: a partida pausa e o cronômetro congela. Quando alguém volta, retoma com o tempo que restava (no mínimo 15 s).
+- A vez pula quem está desconectado. Mestre que cai enquanto escreve tem 30 s para voltar; depois a rodada usa uma pergunta do banco.
 - Sala sem ninguém conectado por 30 min é removida.
 - `game:restart` (dono, depois do fim de jogo) volta ao lobby com os mesmos jogadores e pontos zerados.
 

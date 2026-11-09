@@ -369,6 +369,64 @@ describe('modo Misto', () => {
   });
 });
 
+describe('conexão durante a partida', () => {
+  it('pula na vez quem está desconectado', () => {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine);
+    ok(engine.start(room, ids[0]!));
+    engine.setConnected(room, ids[1]!, false);
+    ok(engine.openWord(room, ids[0]!, 0));
+    ok(engine.guess(room, ids[0]!, 'errado'));
+    expect(round(room).turnPlayerId).toBe(ids[2]); // Bia caiu: vai direto para Caio
+  });
+
+  it('pausa com menos de 2 conectados e retoma com o tempo que restava', () => {
+    const { engine, advance } = setup();
+    const { room, ids } = roomWith(engine, ['Ana', 'Bia']);
+    ok(engine.start(room, ids[0]!));
+    advance(20_000); // restam 40 s da vez
+    const toasts = engine.setConnected(room, ids[1]!, false);
+    expect(room.paused).toBeDefined();
+    expect(toasts.map((t) => t.text)).toContain('Partida pausada: aguardando jogadores');
+    expect(round(room).deadline).toBeUndefined();
+    expect(engine.openWord(room, ids[0]!, 0)).toMatchObject({ ok: false, code: 'WRONG_PHASE' });
+
+    advance(600_000); // muito tempo depois: nada vence enquanto pausado
+    expect(engine.onTimeout(room)).toBeNull();
+
+    const back = ok(engine.join(room, { playerId: ids[1], token: room.players[1]!.token }));
+    expect(back.reconnected).toBe(true);
+    expect(room.paused).toBeUndefined();
+    const left = round(room).deadline! - (1_000_000 + 620_000);
+    expect(left).toBe(40_000);
+    ok(engine.openWord(room, ids[0]!, 0));
+  });
+
+  it('retomada garante um tempo mínimo para a fase', () => {
+    const { engine, advance } = setup();
+    const { room, ids } = roomWith(engine, ['Ana', 'Bia']);
+    ok(engine.start(room, ids[0]!));
+    advance(58_000); // restam 2 s
+    engine.setConnected(room, ids[1]!, false);
+    engine.setConnected(room, ids[1]!, true);
+    expect(round(room).deadline! - (1_000_000 + 58_000)).toBe(15_000);
+  });
+
+  it('mestre que cai enquanto escreve tem 30 s antes de a rodada ir para o banco', () => {
+    const { engine, advance } = setup();
+    const { room, ids } = roomWith(engine);
+    ok(engine.updateConfig(room, ids[0]!, { mode: 'master' }));
+    ok(engine.start(room, ids[0]!));
+    engine.setConnected(room, ids[0]!, false);
+    advance(29_000);
+    expect(engine.onTimeout(room)).toBeNull();
+    advance(2_000);
+    expect(engine.onTimeout(room)).not.toBeNull();
+    expect(round(room).source).toBe('bank');
+    expect(round(room).phase).toBe('choosing');
+  });
+});
+
 describe('jogar de novo', () => {
   it('volta ao lobby com pontos zerados, sem quem saiu', () => {
     const { engine } = setup();

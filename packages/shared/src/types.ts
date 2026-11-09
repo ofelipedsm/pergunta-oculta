@@ -137,6 +137,8 @@ export interface PublicRoomState {
   me: { id: string; isHost: boolean; isMaster: boolean };
   hostId: string;
   phase: RoomPhase;
+  /** Menos de 2 jogadores conectados: cronômetro congelado até alguém voltar. */
+  paused: boolean;
   config: RoomConfig;
   players: PublicPlayer[];
   round?: PublicRound;

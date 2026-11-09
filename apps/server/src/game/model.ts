@@ -83,6 +83,8 @@ export interface Room {
   roundCount: number;
   round?: Round;
   winnerIds?: string[];
+  /** Partida pausada por falta de jogadores conectados; guarda o tempo que restava na fase. */
+  paused?: { remainingMs?: number };
   createdAt: number;
   lastActivity: number;
 }

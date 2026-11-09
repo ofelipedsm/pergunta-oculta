@@ -22,13 +22,17 @@ const goal = computed(() => {
 <template>
   <ScoreBoard />
 
+  <div v-if="room.state?.paused" class="paused" data-test="paused">
+    Partida pausada: aguardando os jogadores voltarem. O cronômetro está parado.
+  </div>
+
   <section v-if="r" class="panel">
     <div class="meta">
       <span v-if="r.source === 'master'" class="tag master">Pergunta de {{ room.playerName(r.masterId) }}</span>
       <span v-if="r.category" class="tag">{{ r.category }}</span>
       <span v-if="r.level" class="tag" :class="`l${r.level}`">{{ LEVEL_LABEL[r.level] }}</span>
       <span class="count">Rodada {{ r.number }} · {{ goal }}</span>
-      <CountdownTimer :deadline="r.deadline" />
+      <CountdownTimer v-if="!room.state?.paused" :deadline="r.deadline" />
     </div>
 
     <template v-if="r.phase !== 'writing'">
@@ -76,6 +80,15 @@ const goal = computed(() => {
 </template>
 
 <style scoped>
+.paused {
+  background: #ffd36b;
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
 .meta {
   display: flex;
   align-items: center;

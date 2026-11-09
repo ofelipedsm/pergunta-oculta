@@ -13,6 +13,10 @@ import type { EngineDeps, EngineResult, Player, Room, Round, Toast } from './mod
 const COLORS = ['#ff7a8a', '#5fd0c5', '#b59cff', '#ffb86b', '#7bd88f', '#6bb8ff', '#ff9ad5', '#e8e46b'];
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ'; // sem I, L e O
 const LOG_MAX = 30;
+/** Mestre que cai enquanto escreve: a rodada espera no máximo isso antes de usar o banco. */
+export const MASTER_OFFLINE_GRACE_MS = 30_000;
+/** Ao retomar uma partida pausada, a fase ganha pelo menos este tempo. */
+export const RESUME_MIN_MS = 15_000;
 
 const fail = (code: ErrorCode, message: string): EngineResult<never> => ({ ok: false, code, message });
 
@@ -62,10 +66,10 @@ export class GameEngine {
     if (input.playerId && input.token) {
       const p = room.players.find((x) => x.id === input.playerId);
       if (p && p.token === input.token) {
-        p.connected = true;
         p.left = false;
+        const toasts = this.setConnected(room, p.id, true);
         this.touch(room);
-        return { ok: true, toasts: [], data: { player: p, reconnected: true } };
+        return { ok: true, toasts, data: { player: p, reconnected: true } };
       }
     }
     if (room.phase !== 'lobby') return fail('GAME_STARTED', 'A partida já começou');
@@ -83,9 +87,12 @@ export class GameEngine {
     };
   }
 
-  setConnected(room: Room, playerId: string, connected: boolean): void {
+  /** Marca a conexão e ajusta a partida: pausa, retomada e prazo do mestre que caiu. */
+  setConnected(room: Room, playerId: string, connected: boolean): Toast[] {
     const p = room.players.find((x) => x.id === playerId);
-    if (p) p.connected = connected;
+    if (!p) return [];
+    p.connected = connected;
+    return this.updatePresence(room, playerId, connected);
   }
 
   leave(room: Room, playerId: string): EngineResult {
@@ -342,7 +349,7 @@ export class GameEngine {
   /** Chamado pelo serviço quando round.deadline vence. Devolve null se não havia nada vencido. */
   onTimeout(room: Room): Toast[] | null {
     const r = room.round;
-    if (room.phase !== 'playing' || !r?.deadline || this.deps.now() < r.deadline) return null;
+    if (room.phase !== 'playing' || room.paused || !r?.deadline || this.deps.now() < r.deadline) return null;
 
     switch (r.phase) {
       case 'writing': {
@@ -439,19 +446,54 @@ export class GameEngine {
     r.deadline = this.deadline(room.config.turnTimeoutSec);
   }
 
+  /** Próximo jogador na ordem, pulando o mestre e, se possível, quem está desconectado. */
   private advanceTurn(room: Room): void {
     const r = room.round!;
     const n = room.players.length;
-    for (let k = 0; k < n; k++) {
-      const idx = (room.turnIndex + k) % n;
-      const p = room.players[idx]!;
-      if (!p.left && p.id !== r.masterId) {
+    for (const onlyConnected of [true, false]) {
+      for (let k = 0; k < n; k++) {
+        const idx = (room.turnIndex + k) % n;
+        const p = room.players[idx]!;
+        if (p.left || p.id === r.masterId || (onlyConnected && !p.connected)) continue;
         room.turnIndex = (idx + 1) % n;
         r.turnPlayerId = p.id;
         return;
       }
     }
     r.turnPlayerId = undefined;
+  }
+
+  /**
+   * Com menos de 2 jogadores conectados, a partida pausa e o cronômetro congela.
+   * Quando volta a ter 2, retoma com o tempo que restava (no mínimo RESUME_MIN_MS).
+   */
+  private updatePresence(room: Room, playerId: string, connected: boolean): Toast[] {
+    if (room.phase !== 'playing') return [];
+    const r = room.round;
+    const now = this.deps.now();
+    const toasts: Toast[] = [];
+    const online = this.active(room).filter((p) => p.connected).length;
+
+    if (online < LIMITS.minPlayers && !room.paused) {
+      room.paused = { remainingMs: r?.deadline ? Math.max(0, r.deadline - now) : undefined };
+      if (r) {
+        r.deadline = undefined;
+        this.log(r, 'Partida pausada: aguardando jogadores');
+      }
+      toasts.push({ kind: 'info', text: 'Partida pausada: aguardando jogadores' });
+    } else if (online >= LIMITS.minPlayers && room.paused) {
+      const remaining = room.paused.remainingMs;
+      room.paused = undefined;
+      if (r && remaining !== undefined) r.deadline = now + Math.max(remaining, RESUME_MIN_MS);
+      if (r) this.log(r, 'Partida retomada');
+      toasts.push({ kind: 'info', text: 'Partida retomada' });
+    }
+
+    // Mestre caiu enquanto escrevia: não segura todo mundo pelo prazo inteiro.
+    if (!connected && !room.paused && r?.phase === 'writing' && r.masterId === playerId) {
+      r.deadline = Math.min(r.deadline ?? Infinity, now + MASTER_OFFLINE_GRACE_MS);
+    }
+    return toasts;
   }
 
   private nextMaster(room: Room): Player | undefined {
@@ -553,6 +595,7 @@ export class GameEngine {
 
   private finishGame(room: Room): void {
     room.phase = 'ended';
+    room.paused = undefined;
     if (room.round) {
       room.round.deadline = undefined;
     }
@@ -685,7 +728,9 @@ export class GameEngine {
 
   private requirePlaying(room: Room, actorId: string): EngineResult<never> | undefined {
     if (!this.player(room, actorId)) return fail('NOT_IN_ROOM', 'Você não está nesta sala');
-    return room.phase === 'playing' ? undefined : fail('WRONG_PHASE', 'A partida não está em andamento');
+    if (room.phase !== 'playing') return fail('WRONG_PHASE', 'A partida não está em andamento');
+    if (room.paused) return fail('WRONG_PHASE', 'Partida pausada: aguardando jogadores');
+    return undefined;
   }
 
   private requireRoundPhase(r: Round | undefined, phase: Round['phase']): EngineResult<never> | undefined {
