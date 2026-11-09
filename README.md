@@ -16,7 +16,7 @@ apps/
     src/rooms/      gateway Socket.IO + serviço das salas em memória
 packages/
   shared/           tipos, contrato de eventos, schemas zod, normalização de respostas
-  question-bank/    454 perguntas. Só o server importa: as respostas nunca vão para o front
+  question-bank/    800 perguntas. Só o server importa: as respostas nunca vão para o front
 ```
 
 O servidor é a única fonte da verdade. O celular recebe só `room:state`, montado por `toPublicState(room, viewerId)`, que nunca inclui pergunta ou respostas para quem está adivinhando.

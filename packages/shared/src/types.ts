@@ -23,6 +23,13 @@ export const CATEGORIES = [
   'Profissões',
   'Marcas e Produtos',
   'Infância',
+  'Folclore e Mitologia',
+  'Jogos e Videogames',
+  'Matemática',
+  'Língua Portuguesa',
+  'Datas e Festas',
+  'Transportes',
+  'Casa e Objetos',
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
 

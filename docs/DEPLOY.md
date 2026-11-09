@@ -28,7 +28,7 @@ Passos:
 2. **New → Blueprint**, escolha o repositório `pergunta-oculta`. O Render lê o `render.yaml` da raiz e cria o serviço `pergunta-oculta-server` com o `Dockerfile`.
 3. Quando ele pedir `CORS_ORIGIN`, deixe em branco por enquanto (você preenche no passo 3).
 4. Espere o primeiro deploy terminar e copie o endereço, algo como `https://pergunta-oculta-server.onrender.com`.
-5. Teste: abra `https://SEU-SERVIDOR/health`. Tem que aparecer `{"ok":true,"questions":454,"rooms":0}`.
+5. Teste: abra `https://SEU-SERVIDOR/health`. Tem que aparecer `{"ok":true,"questions":800,"rooms":0}`.
 
 ### Opção B: Fly.io, cerca de US$ 2/mês, sempre ligado
 
