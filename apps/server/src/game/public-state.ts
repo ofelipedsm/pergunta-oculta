@@ -54,6 +54,7 @@ export function toPublicState(room: Room, viewerId: string, judgeId?: string): P
     })),
     round,
     winnerIds: room.winnerIds ? [...room.winnerIds] : undefined,
+    chat: room.chat.map((m) => ({ ...m })),
     judgeId,
   };
 }

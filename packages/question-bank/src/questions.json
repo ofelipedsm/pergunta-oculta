@@ -3194,5 +3194,1457 @@
    "Visconde de Sabugosa",
    "Visconde"
   ]
+ },
+ {
+  "id": "geografia-026",
+  "category": "Geografia",
+  "level": 1,
+  "question": "Pequim, Xangai e Hong Kong são cidades de qual país",
+  "answers": [
+   "China"
+  ]
+ },
+ {
+  "id": "geografia-027",
+  "category": "Geografia",
+  "level": 1,
+  "question": "Londres, Manchester e Liverpool são cidades de qual país",
+  "answers": [
+   "Inglaterra",
+   "Reino Unido"
+  ]
+ },
+ {
+  "id": "geografia-028",
+  "category": "Geografia",
+  "level": 1,
+  "question": "Berlim, Munique e Hamburgo são cidades de qual país",
+  "answers": [
+   "Alemanha"
+  ]
+ },
+ {
+  "id": "geografia-029",
+  "category": "Geografia",
+  "level": 1,
+  "question": "Qual país europeu tem o formato de uma bota no mapa",
+  "answers": [
+   "Itália",
+   "Italia"
+  ]
+ },
+ {
+  "id": "geografia-030",
+  "category": "Geografia",
+  "level": 2,
+  "question": "Cidade do México, Cancún e Guadalajara são cidades de qual país",
+  "answers": [
+   "México",
+   "Mexico"
+  ]
+ },
+ {
+  "id": "geografia-031",
+  "category": "Geografia",
+  "level": 2,
+  "question": "Santiago, Valparaíso e Viña del Mar são cidades de qual país",
+  "answers": [
+   "Chile"
+  ]
+ },
+ {
+  "id": "geografia-032",
+  "category": "Geografia",
+  "level": 2,
+  "question": "Qual é a capital do Japão",
+  "answers": [
+   "Tóquio",
+   "Toquio",
+   "Tokyo"
+  ]
+ },
+ {
+  "id": "geografia-033",
+  "category": "Geografia",
+  "level": 2,
+  "question": "Qual é a capital da Itália",
+  "answers": [
+   "Roma"
+  ]
+ },
+ {
+  "id": "geografia-034",
+  "category": "Geografia",
+  "level": 3,
+  "question": "Qual é a capital do Egito",
+  "answers": [
+   "Cairo",
+   "O Cairo"
+  ]
+ },
+ {
+  "id": "geografia-035",
+  "category": "Geografia",
+  "level": 3,
+  "question": "Qual é a capital da Coreia do Sul",
+  "answers": [
+   "Seul"
+  ]
+ },
+ {
+  "id": "geografia-036",
+  "category": "Geografia",
+  "level": 3,
+  "question": "Qual é o maior país da África em território",
+  "answers": [
+   "Argélia",
+   "Argelia"
+  ]
+ },
+ {
+  "id": "geografia-037",
+  "category": "Geografia",
+  "level": 3,
+  "question": "Qual estreito separa a Europa da África",
+  "answers": [
+   "Gibraltar",
+   "Estreito de Gibraltar"
+  ]
+ },
+ {
+  "id": "historia-023",
+  "category": "História",
+  "level": 1,
+  "question": "Qual povo antigo é famoso pelos faraós e pelas múmias",
+  "answers": [
+   "Egípcios",
+   "Egipcios",
+   "Egito",
+   "Egípcio"
+  ]
+ },
+ {
+  "id": "historia-024",
+  "category": "História",
+  "level": 1,
+  "question": "Qual guerra mundial terminou em 1945",
+  "answers": [
+   "Segunda",
+   "Segunda Guerra Mundial",
+   "Segunda Guerra",
+   "2ª"
+  ]
+ },
+ {
+  "id": "historia-025",
+  "category": "História",
+  "level": 2,
+  "question": "Qual povo antigo construiu o Coliseu",
+  "answers": [
+   "Romanos",
+   "Romano",
+   "Roma",
+   "Império Romano"
+  ]
+ },
+ {
+  "id": "historia-026",
+  "category": "História",
+  "level": 2,
+  "question": "Qual imperador governou o Brasil por quase 50 anos no século 19",
+  "answers": [
+   "Dom Pedro II",
+   "Pedro II",
+   "D. Pedro II",
+   "Pedro Segundo"
+  ]
+ },
+ {
+  "id": "historia-027",
+  "category": "História",
+  "level": 2,
+  "question": "Qual princesa britânica morreu num acidente de carro em Paris em 1997",
+  "answers": [
+   "Diana",
+   "Lady Di",
+   "Princesa Diana"
+  ]
+ },
+ {
+  "id": "historia-028",
+  "category": "História",
+  "level": 2,
+  "question": "Qual líder sul-africano ficou 27 anos preso e depois virou presidente",
+  "answers": [
+   "Nelson Mandela",
+   "Mandela"
+  ]
+ },
+ {
+  "id": "historia-029",
+  "category": "História",
+  "level": 2,
+  "question": "Qual cidade japonesa foi atingida pela primeira bomba atômica em 1945",
+  "answers": [
+   "Hiroshima"
+  ]
+ },
+ {
+  "id": "historia-030",
+  "category": "História",
+  "level": 2,
+  "question": "Qual rainha governou o Reino Unido por mais de 70 anos",
+  "answers": [
+   "Elizabeth II",
+   "Elizabeth",
+   "Isabel II",
+   "Rainha Elizabeth"
+  ]
+ },
+ {
+  "id": "historia-031",
+  "category": "História",
+  "level": 3,
+  "question": "Em que ano começou a Primeira Guerra Mundial",
+  "answers": [
+   "1914"
+  ]
+ },
+ {
+  "id": "historia-032",
+  "category": "História",
+  "level": 3,
+  "question": "Qual presidente brasileiro criou a CLT e governou durante o Estado Novo",
+  "answers": [
+   "Getúlio Vargas",
+   "Getulio Vargas",
+   "Vargas",
+   "Getúlio"
+  ]
+ },
+ {
+  "id": "historia-033",
+  "category": "História",
+  "level": 3,
+  "question": "Qual presidente americano foi assassinado em 1963 na cidade de Dallas",
+  "answers": [
+   "John Kennedy",
+   "Kennedy",
+   "JFK",
+   "John F. Kennedy"
+  ]
+ },
+ {
+  "id": "historia-034",
+  "category": "História",
+  "level": 3,
+  "question": "Qual foi o primeiro país a mandar um ser humano ao espaço",
+  "answers": [
+   "União Soviética",
+   "URSS",
+   "Uniao Sovietica",
+   "Rússia",
+   "Russia"
+  ]
+ },
+ {
+  "id": "ciencia-023",
+  "category": "Ciência",
+  "level": 1,
+  "question": "Qual planeta, o terceiro a partir do Sol, é onde nós vivemos",
+  "answers": [
+   "Terra"
+  ]
+ },
+ {
+  "id": "ciencia-024",
+  "category": "Ciência",
+  "level": 1,
+  "question": "Em qual estado físico a água fica quando vira vapor",
+  "answers": [
+   "Gasoso",
+   "Gás",
+   "Gas"
+  ]
+ },
+ {
+  "id": "ciencia-025",
+  "category": "Ciência",
+  "level": 1,
+  "question": "De que cor é a clorofila que existe nas folhas das plantas",
+  "answers": [
+   "Verde"
+  ]
+ },
+ {
+  "id": "ciencia-026",
+  "category": "Ciência",
+  "level": 2,
+  "question": "Qual metal é o mais usado para fazer fios elétricos",
+  "answers": [
+   "Cobre"
+  ]
+ },
+ {
+  "id": "ciencia-027",
+  "category": "Ciência",
+  "level": 2,
+  "question": "Qual parte da célula guarda o material genético",
+  "answers": [
+   "Núcleo",
+   "Nucleo"
+  ]
+ },
+ {
+  "id": "ciencia-028",
+  "category": "Ciência",
+  "level": 2,
+  "question": "Como se chama a passagem da água do estado líquido para o gasoso",
+  "answers": [
+   "Evaporação",
+   "Evaporacao",
+   "Vaporização",
+   "Ebulição"
+  ]
+ },
+ {
+  "id": "ciencia-029",
+  "category": "Ciência",
+  "level": 2,
+  "question": "Qual cientista inglês propôs a teoria da evolução das espécies",
+  "answers": [
+   "Charles Darwin",
+   "Darwin"
+  ]
+ },
+ {
+  "id": "ciencia-030",
+  "category": "Ciência",
+  "level": 3,
+  "question": "Qual é o símbolo químico do ferro na tabela periódica",
+  "answers": [
+   "Fe"
+  ]
+ },
+ {
+  "id": "ciencia-031",
+  "category": "Ciência",
+  "level": 3,
+  "question": "Qual é a unidade de medida de força no Sistema Internacional",
+  "answers": [
+   "Newton",
+   "N"
+  ]
+ },
+ {
+  "id": "ciencia-032",
+  "category": "Ciência",
+  "level": 3,
+  "question": "Quantos cromossomos tem uma célula humana comum",
+  "answers": [
+   "46",
+   "quarenta e seis"
+  ]
+ },
+ {
+  "id": "ciencia-033",
+  "category": "Ciência",
+  "level": 3,
+  "question": "Qual planeta gira deitado, com o eixo quase paralelo à sua órbita",
+  "answers": [
+   "Urano"
+  ]
+ },
+ {
+  "id": "animais-025",
+  "category": "Animais",
+  "level": 1,
+  "question": "Qual animal carrega uma casca nas costas e anda bem devagar",
+  "answers": [
+   "Tartaruga",
+   "Jabuti",
+   "Cágado",
+   "Cagado"
+  ]
+ },
+ {
+  "id": "animais-026",
+  "category": "Animais",
+  "level": 1,
+  "question": "Qual animal pula, coaxa e vive perto de lagoas",
+  "answers": [
+   "Sapo",
+   "Rã",
+   "Ra",
+   "Perereca"
+  ]
+ },
+ {
+  "id": "animais-027",
+  "category": "Animais",
+  "level": 1,
+  "question": "Qual ave de penas coloridas consegue imitar a fala humana",
+  "answers": [
+   "Papagaio",
+   "Arara",
+   "Periquito"
+  ]
+ },
+ {
+  "id": "animais-028",
+  "category": "Animais",
+  "level": 2,
+  "question": "Qual inseto colorido nasce lagarta e depois sai de um casulo",
+  "answers": [
+   "Borboleta",
+   "Mariposa"
+  ]
+ },
+ {
+  "id": "animais-029",
+  "category": "Animais",
+  "level": 2,
+  "question": "Qual animal marinho tem tentáculos e pode queimar quem encosta nele",
+  "answers": [
+   "Água-viva",
+   "Agua viva",
+   "Água viva",
+   "Medusa"
+  ]
+ },
+ {
+  "id": "animais-030",
+  "category": "Animais",
+  "level": 2,
+  "question": "Qual mamífero do mar é famoso pela inteligência e pelos saltos",
+  "answers": [
+   "Golfinho",
+   "Boto"
+  ]
+ },
+ {
+  "id": "animais-031",
+  "category": "Animais",
+  "level": 3,
+  "question": "Qual é a única ave que consegue voar para trás",
+  "answers": [
+   "Beija-flor",
+   "Beija flor",
+   "Colibri"
+  ]
+ },
+ {
+  "id": "animais-032",
+  "category": "Animais",
+  "level": 3,
+  "question": "Como se chama o filhote do sapo",
+  "answers": [
+   "Girino"
+  ]
+ },
+ {
+  "id": "animais-033",
+  "category": "Animais",
+  "level": 3,
+  "question": "Qual animal da Austrália dorme quase o dia todo e só come folhas de eucalipto",
+  "answers": [
+   "Coala"
+  ]
+ },
+ {
+  "id": "esportes-020",
+  "category": "Esportes",
+  "level": 1,
+  "question": "Em qual jogo se usa um taco e bolas coloridas numa mesa com caçapas",
+  "answers": [
+   "Sinuca",
+   "Bilhar",
+   "Snooker"
+  ]
+ },
+ {
+  "id": "esportes-021",
+  "category": "Esportes",
+  "level": 1,
+  "question": "Quantas rodas tem um skate",
+  "answers": [
+   "4",
+   "quatro"
+  ]
+ },
+ {
+  "id": "esportes-022",
+  "category": "Esportes",
+  "level": 1,
+  "question": "Em qual esporte se usa uma prancha para pegar ondas no mar",
+  "answers": [
+   "Surfe",
+   "Surf"
+  ]
+ },
+ {
+  "id": "esportes-023",
+  "category": "Esportes",
+  "level": 2,
+  "question": "Em qual esporte de luta os atletas usam quimono e faixas coloridas",
+  "answers": [
+   "Judô",
+   "Judo",
+   "Jiu-jitsu",
+   "Jiu jitsu",
+   "Karatê",
+   "Karate",
+   "Caratê"
+  ]
+ },
+ {
+  "id": "esportes-024",
+  "category": "Esportes",
+  "level": 2,
+  "question": "Qual jogador argentino foi o capitão campeão da Copa do Mundo de 2022",
+  "answers": [
+   "Messi",
+   "Lionel Messi"
+  ]
+ },
+ {
+  "id": "esportes-025",
+  "category": "Esportes",
+  "level": 2,
+  "question": "Qual país sediou a Copa do Mundo de futebol de 2014",
+  "answers": [
+   "Brasil"
+  ]
+ },
+ {
+  "id": "esportes-026",
+  "category": "Esportes",
+  "level": 3,
+  "question": "Quantos jogadores de cada time ficam em quadra numa partida de basquete",
+  "answers": [
+   "5",
+   "cinco"
+  ]
+ },
+ {
+  "id": "esportes-027",
+  "category": "Esportes",
+  "level": 3,
+  "question": "Qual brasileiro foi eleito o melhor jogador do mundo pela Fifa em 2007",
+  "answers": [
+   "Kaká",
+   "Kaka"
+  ]
+ },
+ {
+  "id": "esportes-028",
+  "category": "Esportes",
+  "level": 3,
+  "question": "Em qual cidade foi a final da Copa de 1950, conhecida como Maracanaço",
+  "answers": [
+   "Rio de Janeiro",
+   "Rio"
+  ]
+ },
+ {
+  "id": "musica-021",
+  "category": "Música",
+  "level": 1,
+  "question": "Qual instrumento de percussão tem pratos, caixa e bumbo",
+  "answers": [
+   "Bateria"
+  ]
+ },
+ {
+  "id": "musica-022",
+  "category": "Música",
+  "level": 1,
+  "question": "Qual parte do corpo a gente usa para tocar flauta e trompete",
+  "answers": [
+   "Boca",
+   "Lábios",
+   "Labios"
+  ]
+ },
+ {
+  "id": "musica-023",
+  "category": "Música",
+  "level": 2,
+  "question": "Qual cantor gravou Asa Branca e é conhecido como Rei do Baião",
+  "answers": [
+   "Luiz Gonzaga",
+   "Gonzagão",
+   "Gonzagao"
+  ]
+ },
+ {
+  "id": "musica-024",
+  "category": "Música",
+  "level": 2,
+  "question": "Qual cantora brasileira ficou conhecida como Rainha do Rock nacional",
+  "answers": [
+   "Rita Lee"
+  ]
+ },
+ {
+  "id": "musica-025",
+  "category": "Música",
+  "level": 2,
+  "question": "Ivete Sangalo, Claudia Leitte e Daniela Mercury cantam qual ritmo baiano",
+  "answers": [
+   "Axé",
+   "Axe",
+   "Axé music"
+  ]
+ },
+ {
+  "id": "musica-026",
+  "category": "Música",
+  "level": 2,
+  "question": "Quantas notas musicais existem na escala dó, ré, mi, fá, sol, lá, si",
+  "answers": [
+   "7",
+   "sete"
+  ]
+ },
+ {
+  "id": "musica-027",
+  "category": "Música",
+  "level": 3,
+  "question": "Qual banda britânica lançou o álbum The Dark Side of the Moon",
+  "answers": [
+   "Pink Floyd"
+  ]
+ },
+ {
+  "id": "musica-028",
+  "category": "Música",
+  "level": 3,
+  "question": "Qual cantor jamaicano ficou famoso pelo reggae com a música No Woman No Cry",
+  "answers": [
+   "Bob Marley",
+   "Marley"
+  ]
+ },
+ {
+  "id": "cinema-e-tv-022",
+  "category": "Cinema e TV",
+  "level": 1,
+  "question": "Qual coelho dos desenhos pergunta: O que é que há, velhinho",
+  "answers": [
+   "Pernalonga",
+   "Perna Longa",
+   "Bugs Bunny"
+  ]
+ },
+ {
+  "id": "cinema-e-tv-023",
+  "category": "Cinema e TV",
+  "level": 1,
+  "question": "Qual é o nome do cachorro branco e preto do Charlie Brown",
+  "answers": [
+   "Snoopy"
+  ]
+ },
+ {
+  "id": "cinema-e-tv-024",
+  "category": "Cinema e TV",
+  "level": 1,
+  "question": "Qual super-herói usa capa vermelha e tem um S no peito",
+  "answers": [
+   "Superman",
+   "Super-Homem",
+   "Super Homem"
+  ]
+ },
+ {
+  "id": "cinema-e-tv-025",
+  "category": "Cinema e TV",
+  "level": 2,
+  "question": "Qual é o nome do robô amarelo que vira um carro em Transformers",
+  "answers": [
+   "Bumblebee"
+  ]
+ },
+ {
+  "id": "cinema-e-tv-026",
+  "category": "Cinema e TV",
+  "level": 2,
+  "question": "Qual mestre verde e baixinho de Star Wars fala com as frases invertidas",
+  "answers": [
+   "Yoda",
+   "Mestre Yoda"
+  ]
+ },
+ {
+  "id": "cinema-e-tv-027",
+  "category": "Cinema e TV",
+  "level": 2,
+  "question": "Qual peixinha azul esquecida ajuda a procurar o Nemo",
+  "answers": [
+   "Dory",
+   "Dori"
+  ]
+ },
+ {
+  "id": "cinema-e-tv-028",
+  "category": "Cinema e TV",
+  "level": 2,
+  "question": "Qual série da Netflix se passa em Hawkins e tem o Mundo Invertido",
+  "answers": [
+   "Stranger Things"
+  ]
+ },
+ {
+  "id": "cinema-e-tv-029",
+  "category": "Cinema e TV",
+  "level": 3,
+  "question": "Qual diretor brasileiro dirigiu o filme Central do Brasil",
+  "answers": [
+   "Walter Salles"
+  ]
+ },
+ {
+  "id": "cinema-e-tv-030",
+  "category": "Cinema e TV",
+  "level": 3,
+  "question": "Qual ator ganhou o Oscar interpretando o Coringa no filme de 2019",
+  "answers": [
+   "Joaquin Phoenix",
+   "Phoenix"
+  ]
+ },
+ {
+  "id": "cinema-e-tv-031",
+  "category": "Cinema e TV",
+  "level": 3,
+  "question": "Qual palhaço assustador aparece no filme It, a Coisa",
+  "answers": [
+   "Pennywise"
+  ]
+ },
+ {
+  "id": "comida-e-bebida-024",
+  "category": "Comida e Bebida",
+  "level": 1,
+  "question": "Qual comida feita de milho estoura na panela e se come no cinema",
+  "answers": [
+   "Pipoca"
+  ]
+ },
+ {
+  "id": "comida-e-bebida-025",
+  "category": "Comida e Bebida",
+  "level": 1,
+  "question": "Qual fruta é verde por fora, vermelha por dentro e cheia de sementes pretas",
+  "answers": [
+   "Melancia"
+  ]
+ },
+ {
+  "id": "comida-e-bebida-026",
+  "category": "Comida e Bebida",
+  "level": 1,
+  "question": "O que a galinha bota que a gente frita no café da manhã",
+  "answers": [
+   "Ovo",
+   "Ovos"
+  ]
+ },
+ {
+  "id": "comida-e-bebida-027",
+  "category": "Comida e Bebida",
+  "level": 2,
+  "question": "Qual prato italiano tem camadas de massa, molho e queijo assadas no forno",
+  "answers": [
+   "Lasanha"
+  ]
+ },
+ {
+  "id": "comida-e-bebida-028",
+  "category": "Comida e Bebida",
+  "level": 2,
+  "question": "Qual doce de festa junina é feito com amendoim moído e açúcar",
+  "answers": [
+   "Paçoca",
+   "Pacoca",
+   "Pé de moleque",
+   "Pe de moleque"
+  ]
+ },
+ {
+  "id": "comida-e-bebida-029",
+  "category": "Comida e Bebida",
+  "level": 2,
+  "question": "Qual bebida gelada é feita batendo leite com sorvete",
+  "answers": [
+   "Milk-shake",
+   "Milkshake",
+   "Milk shake",
+   "Vitamina"
+  ]
+ },
+ {
+  "id": "comida-e-bebida-030",
+  "category": "Comida e Bebida",
+  "level": 3,
+  "question": "De qual estado brasileiro é típico o pão de queijo",
+  "answers": [
+   "Minas Gerais",
+   "Minas",
+   "MG"
+  ]
+ },
+ {
+  "id": "comida-e-bebida-031",
+  "category": "Comida e Bebida",
+  "level": 3,
+  "question": "Qual peixe da Amazônia é um dos maiores peixes de água doce do mundo",
+  "answers": [
+   "Pirarucu"
+  ]
+ },
+ {
+  "id": "comida-e-bebida-032",
+  "category": "Comida e Bebida",
+  "level": 3,
+  "question": "Qual comida paraense é servida numa cuia com tucupi, jambu e camarão",
+  "answers": [
+   "Tacacá",
+   "Tacaca"
+  ]
+ },
+ {
+  "id": "tecnologia-021",
+  "category": "Tecnologia",
+  "level": 1,
+  "question": "Qual aparelho da cozinha esquenta a comida em poucos minutos",
+  "answers": [
+   "Micro-ondas",
+   "Microondas",
+   "Micro ondas"
+  ]
+ },
+ {
+  "id": "tecnologia-022",
+  "category": "Tecnologia",
+  "level": 1,
+  "question": "Qual aplicativo verde é o mais usado no Brasil para mandar mensagens",
+  "answers": [
+   "WhatsApp",
+   "Whatsapp",
+   "Zap",
+   "Wpp"
+  ]
+ },
+ {
+  "id": "tecnologia-023",
+  "category": "Tecnologia",
+  "level": 2,
+  "question": "Qual empresa é dona do Facebook, do Instagram e do WhatsApp",
+  "answers": [
+   "Meta",
+   "Facebook"
+  ]
+ },
+ {
+  "id": "tecnologia-024",
+  "category": "Tecnologia",
+  "level": 2,
+  "question": "Qual rede social chinesa ficou famosa pelos vídeos curtos e pelas dancinhas",
+  "answers": [
+   "TikTok",
+   "Tik Tok"
+  ]
+ },
+ {
+  "id": "tecnologia-025",
+  "category": "Tecnologia",
+  "level": 2,
+  "question": "Qual empresa fabrica os carros elétricos de Elon Musk",
+  "answers": [
+   "Tesla"
+  ]
+ },
+ {
+  "id": "tecnologia-026",
+  "category": "Tecnologia",
+  "level": 2,
+  "question": "Qual é o nome da assistente de voz da Amazon",
+  "answers": [
+   "Alexa"
+  ]
+ },
+ {
+  "id": "tecnologia-027",
+  "category": "Tecnologia",
+  "level": 3,
+  "question": "Qual é o nome da assistente de voz da Apple",
+  "answers": [
+   "Siri"
+  ]
+ },
+ {
+  "id": "tecnologia-028",
+  "category": "Tecnologia",
+  "level": 3,
+  "question": "Qual era o nome do clipe animado que ajudava no antigo Microsoft Office",
+  "answers": [
+   "Clippy",
+   "Clipit",
+   "Clipe"
+  ]
+ },
+ {
+  "id": "corpo-humano-021",
+  "category": "Corpo Humano",
+  "level": 1,
+  "question": "Com qual parte do corpo a gente sente o gosto da comida",
+  "answers": [
+   "Língua",
+   "Lingua"
+  ]
+ },
+ {
+  "id": "corpo-humano-022",
+  "category": "Corpo Humano",
+  "level": 1,
+  "question": "Quantos braços tem uma pessoa",
+  "answers": [
+   "2",
+   "dois"
+  ]
+ },
+ {
+  "id": "corpo-humano-023",
+  "category": "Corpo Humano",
+  "level": 1,
+  "question": "O que cresce na cabeça e a gente corta no cabeleireiro",
+  "answers": [
+   "Cabelo",
+   "Cabelos"
+  ]
+ },
+ {
+  "id": "corpo-humano-024",
+  "category": "Corpo Humano",
+  "level": 2,
+  "question": "Qual órgão fica do lado direito da barriga e produz a bile",
+  "answers": [
+   "Fígado",
+   "Figado"
+  ]
+ },
+ {
+  "id": "corpo-humano-025",
+  "category": "Corpo Humano",
+  "level": 2,
+  "question": "Como se chamam os ossos que protegem o coração e os pulmões",
+  "answers": [
+   "Costelas",
+   "Costela",
+   "Caixa torácica"
+  ]
+ },
+ {
+  "id": "corpo-humano-026",
+  "category": "Corpo Humano",
+  "level": 2,
+  "question": "Com qual sentido a gente percebe se algo está quente ou frio",
+  "answers": [
+   "Tato"
+  ]
+ },
+ {
+  "id": "corpo-humano-027",
+  "category": "Corpo Humano",
+  "level": 3,
+  "question": "Qual é o maior músculo do corpo humano",
+  "answers": [
+   "Glúteo",
+   "Gluteo",
+   "Glúteo máximo",
+   "Bumbum"
+  ]
+ },
+ {
+  "id": "corpo-humano-028",
+  "category": "Corpo Humano",
+  "level": 3,
+  "question": "Qual tubo leva a comida da boca até o estômago",
+  "answers": [
+   "Esôfago",
+   "Esofago"
+  ]
+ },
+ {
+  "id": "corpo-humano-029",
+  "category": "Corpo Humano",
+  "level": 3,
+  "question": "Qual glândula do pescoço controla o metabolismo do corpo",
+  "answers": [
+   "Tireoide",
+   "Tireóide",
+   "Tiroide"
+  ]
+ },
+ {
+  "id": "brasil-021",
+  "category": "Brasil",
+  "level": 1,
+  "question": "De que cor é o losango da bandeira do Brasil",
+  "answers": [
+   "Amarelo",
+   "Amarela"
+  ]
+ },
+ {
+  "id": "brasil-022",
+  "category": "Brasil",
+  "level": 1,
+  "question": "Em qual estado brasileiro ficam os Lençóis Maranhenses",
+  "answers": [
+   "Maranhão",
+   "Maranhao",
+   "MA"
+  ]
+ },
+ {
+  "id": "brasil-023",
+  "category": "Brasil",
+  "level": 2,
+  "question": "Qual é a capital do Rio Grande do Sul",
+  "answers": [
+   "Porto Alegre",
+   "POA"
+  ]
+ },
+ {
+  "id": "brasil-024",
+  "category": "Brasil",
+  "level": 2,
+  "question": "Qual é a capital de Minas Gerais",
+  "answers": [
+   "Belo Horizonte",
+   "BH"
+  ]
+ },
+ {
+  "id": "brasil-025",
+  "category": "Brasil",
+  "level": 2,
+  "question": "Em qual cidade brasileira fica o Elevador Lacerda",
+  "answers": [
+   "Salvador"
+  ]
+ },
+ {
+  "id": "brasil-026",
+  "category": "Brasil",
+  "level": 2,
+  "question": "Qual arquipélago de Pernambuco é famoso pelas praias e pelos golfinhos",
+  "answers": [
+   "Fernando de Noronha",
+   "Noronha"
+  ]
+ },
+ {
+  "id": "brasil-027",
+  "category": "Brasil",
+  "level": 3,
+  "question": "Qual é a capital de Roraima",
+  "answers": [
+   "Boa Vista"
+  ]
+ },
+ {
+  "id": "brasil-028",
+  "category": "Brasil",
+  "level": 3,
+  "question": "Qual é a capital do Amapá",
+  "answers": [
+   "Macapá",
+   "Macapa"
+  ]
+ },
+ {
+  "id": "brasil-029",
+  "category": "Brasil",
+  "level": 3,
+  "question": "Qual arquiteto projetou os prédios mais famosos de Brasília",
+  "answers": [
+   "Oscar Niemeyer",
+   "Niemeyer"
+  ]
+ },
+ {
+  "id": "natureza-019",
+  "category": "Natureza",
+  "level": 1,
+  "question": "Qual estação do ano é a mais fria",
+  "answers": [
+   "Inverno"
+  ]
+ },
+ {
+  "id": "natureza-020",
+  "category": "Natureza",
+  "level": 1,
+  "question": "Qual parte da planta fica embaixo da terra e puxa a água",
+  "answers": [
+   "Raiz",
+   "Raízes",
+   "Raizes"
+  ]
+ },
+ {
+  "id": "natureza-021",
+  "category": "Natureza",
+  "level": 2,
+  "question": "Como se chama o vento muito forte que gira em forma de funil",
+  "answers": [
+   "Tornado",
+   "Furacão",
+   "Furacao",
+   "Redemoinho"
+  ]
+ },
+ {
+  "id": "natureza-022",
+  "category": "Natureza",
+  "level": 2,
+  "question": "Qual pedra preciosa é a mais dura da natureza",
+  "answers": [
+   "Diamante"
+  ]
+ },
+ {
+  "id": "natureza-023",
+  "category": "Natureza",
+  "level": 2,
+  "question": "Qual fenômeno faz o nível do mar subir e descer ao longo do dia",
+  "answers": [
+   "Maré",
+   "Mare",
+   "Marés"
+  ]
+ },
+ {
+  "id": "natureza-024",
+  "category": "Natureza",
+  "level": 3,
+  "question": "Qual é o maior deserto quente do mundo",
+  "answers": [
+   "Saara",
+   "Sahara",
+   "Deserto do Saara"
+  ]
+ },
+ {
+  "id": "natureza-025",
+  "category": "Natureza",
+  "level": 3,
+  "question": "Qual gás forma a maior parte do ar que respiramos",
+  "answers": [
+   "Nitrogênio",
+   "Nitrogenio",
+   "Azoto"
+  ]
+ },
+ {
+  "id": "natureza-026",
+  "category": "Natureza",
+  "level": 3,
+  "question": "Qual vulcão destruiu a cidade romana de Pompeia",
+  "answers": [
+   "Vesúvio",
+   "Vesuvio",
+   "Monte Vesúvio"
+  ]
+ },
+ {
+  "id": "profissoes-021",
+  "category": "Profissões",
+  "level": 1,
+  "question": "Qual profissional dirige o ônibus da cidade",
+  "answers": [
+   "Motorista",
+   "Motorista de ônibus",
+   "Chofer"
+  ]
+ },
+ {
+  "id": "profissoes-022",
+  "category": "Profissões",
+  "level": 1,
+  "question": "Qual profissional prepara a comida nos restaurantes",
+  "answers": [
+   "Cozinheiro",
+   "Cozinheira",
+   "Chef",
+   "Chefe de cozinha"
+  ]
+ },
+ {
+  "id": "profissoes-023",
+  "category": "Profissões",
+  "level": 1,
+  "question": "Qual profissional entrega as cartas nas casas",
+  "answers": [
+   "Carteiro",
+   "Carteira"
+  ]
+ },
+ {
+  "id": "profissoes-024",
+  "category": "Profissões",
+  "level": 2,
+  "question": "Qual profissional cuida das contas e dos impostos de uma empresa",
+  "answers": [
+   "Contador",
+   "Contadora"
+  ]
+ },
+ {
+  "id": "profissoes-025",
+  "category": "Profissões",
+  "level": 2,
+  "question": "Qual profissional levanta paredes de tijolo nas obras",
+  "answers": [
+   "Pedreiro"
+  ]
+ },
+ {
+  "id": "profissoes-026",
+  "category": "Profissões",
+  "level": 2,
+  "question": "Qual profissional apita e controla uma partida de futebol",
+  "answers": [
+   "Árbitro",
+   "Arbitro",
+   "Juiz"
+  ]
+ },
+ {
+  "id": "profissoes-027",
+  "category": "Profissões",
+  "level": 3,
+  "question": "Qual médico cuida dos ossos e das fraturas",
+  "answers": [
+   "Ortopedista"
+  ]
+ },
+ {
+  "id": "profissoes-028",
+  "category": "Profissões",
+  "level": 3,
+  "question": "Qual cientista estuda as rochas e o solo",
+  "answers": [
+   "Geólogo",
+   "Geologo"
+  ]
+ },
+ {
+  "id": "profissoes-029",
+  "category": "Profissões",
+  "level": 3,
+  "question": "Qual médico acompanha a gravidez e faz os partos",
+  "answers": [
+   "Obstetra",
+   "Ginecologista",
+   "Obstetriz"
+  ]
+ },
+ {
+  "id": "marcas-e-produtos-020",
+  "category": "Marcas e Produtos",
+  "level": 1,
+  "question": "Omo, Ariel e Brilhante são marcas de qual produto",
+  "answers": [
+   "Sabão em pó",
+   "Sabao em po",
+   "Sabão",
+   "Detergente"
+  ]
+ },
+ {
+  "id": "marcas-e-produtos-021",
+  "category": "Marcas e Produtos",
+  "level": 1,
+  "question": "Colgate, Sorriso e Close Up são marcas de qual produto",
+  "answers": [
+   "Pasta de dente",
+   "Creme dental",
+   "Pasta de dentes"
+  ]
+ },
+ {
+  "id": "marcas-e-produtos-022",
+  "category": "Marcas e Produtos",
+  "level": 1,
+  "question": "Ninho, Piracanjuba e Italac são marcas de qual alimento",
+  "answers": [
+   "Leite"
+  ]
+ },
+ {
+  "id": "marcas-e-produtos-023",
+  "category": "Marcas e Produtos",
+  "level": 2,
+  "question": "Heineken, Brahma e Skol são marcas de qual bebida",
+  "answers": [
+   "Cerveja",
+   "Cervejas"
+  ]
+ },
+ {
+  "id": "marcas-e-produtos-024",
+  "category": "Marcas e Produtos",
+  "level": 2,
+  "question": "Natura, O Boticário e Avon são marcas famosas de quê",
+  "answers": [
+   "Perfume",
+   "Perfumes",
+   "Cosméticos",
+   "Cosmeticos",
+   "Maquiagem",
+   "Beleza"
+  ]
+ },
+ {
+  "id": "marcas-e-produtos-025",
+  "category": "Marcas e Produtos",
+  "level": 2,
+  "question": "PlayStation, Xbox e Switch são exemplos de quê",
+  "answers": [
+   "Videogame",
+   "Videogames",
+   "Console",
+   "Consoles",
+   "Video game"
+  ]
+ },
+ {
+  "id": "marcas-e-produtos-026",
+  "category": "Marcas e Produtos",
+  "level": 2,
+  "question": "Toyota, Honda e Nissan são montadoras de qual país",
+  "answers": [
+   "Japão",
+   "Japao"
+  ]
+ },
+ {
+  "id": "marcas-e-produtos-027",
+  "category": "Marcas e Produtos",
+  "level": 3,
+  "question": "Gucci, Prada e Versace são marcas de moda de qual país",
+  "answers": [
+   "Itália",
+   "Italia"
+  ]
+ },
+ {
+  "id": "marcas-e-produtos-028",
+  "category": "Marcas e Produtos",
+  "level": 3,
+  "question": "Qual marca de chocolate fabrica o bombom Sonho de Valsa",
+  "answers": [
+   "Lacta"
+  ]
+ },
+ {
+  "id": "infancia-021",
+  "category": "Infância",
+  "level": 1,
+  "question": "Qual brincadeira tem um pegador que precisa encostar nos outros",
+  "answers": [
+   "Pega-pega",
+   "Pega pega",
+   "Pique-pega",
+   "Pique"
+  ]
+ },
+ {
+  "id": "infancia-022",
+  "category": "Infância",
+  "level": 1,
+  "question": "Qual brinquedo gira no chão depois de puxar a cordinha",
+  "answers": [
+   "Pião",
+   "Piao"
+  ]
+ },
+ {
+  "id": "infancia-023",
+  "category": "Infância",
+  "level": 1,
+  "question": "Qual personagem da Turma da Mônica é baixinha, dentuça e usa vestido vermelho",
+  "answers": [
+   "Mônica",
+   "Monica"
+  ]
+ },
+ {
+  "id": "infancia-024",
+  "category": "Infância",
+  "level": 2,
+  "question": "Qual personagem da Turma da Mônica é comilona e adora melancia",
+  "answers": [
+   "Magali"
+  ]
+ },
+ {
+  "id": "infancia-025",
+  "category": "Infância",
+  "level": 2,
+  "question": "Qual menino de Mauricio de Sousa mora na roça e anda descalço",
+  "answers": [
+   "Chico Bento",
+   "Chico"
+  ]
+ },
+ {
+  "id": "infancia-026",
+  "category": "Infância",
+  "level": 2,
+  "question": "Qual princesa da Disney vive no fundo do mar e tem cauda de peixe",
+  "answers": [
+   "Ariel",
+   "Pequena Sereia",
+   "A Pequena Sereia"
+  ]
+ },
+ {
+  "id": "infancia-027",
+  "category": "Infância",
+  "level": 3,
+  "question": "Qual escritor francês escreveu O Pequeno Príncipe",
+  "answers": [
+   "Antoine de Saint-Exupéry",
+   "Saint-Exupéry",
+   "Saint Exupery",
+   "Exupéry"
+  ]
+ },
+ {
+  "id": "infancia-028",
+  "category": "Infância",
+  "level": 3,
+  "question": "Qual é o nome da fadinha amiga do Peter Pan",
+  "answers": [
+   "Sininho",
+   "Tinker Bell",
+   "Tinkerbell"
+  ]
+ },
+ {
+  "id": "infancia-029",
+  "category": "Infância",
+  "level": 3,
+  "question": "Qual autor brasileiro criou O Menino Maluquinho",
+  "answers": [
+   "Ziraldo"
+  ]
  }
 ]

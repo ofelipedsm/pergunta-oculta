@@ -47,10 +47,6 @@ const goal = computed(() => {
 
     <ActionPanel />
 
-    <details v-if="r.log.length" class="log">
-      <summary>Histórico da rodada</summary>
-      <div v-for="(l, i) in r.log" :key="i">{{ l.text }}</div>
-    </details>
   </section>
 
   <div class="footer">
@@ -109,19 +105,6 @@ const goal = computed(() => {
 .worth b {
   color: var(--gold);
   font: 800 20px Fraunces, serif;
-}
-.log {
-  margin-top: 14px;
-  font-size: 13px;
-  color: var(--muted);
-}
-.log summary {
-  cursor: pointer;
-  margin-bottom: 6px;
-}
-.log div {
-  padding: 3px 0;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
 }
 .footer {
   display: flex;

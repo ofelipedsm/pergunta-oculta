@@ -7,6 +7,7 @@ import { useRoomStore } from '@/stores/room'
 import LobbyScreen from '@/components/LobbyScreen.vue'
 import GameScreen from '@/components/GameScreen.vue'
 import EndScreen from '@/components/EndScreen.vue'
+import ChatDock from '@/components/ChatDock.vue'
 
 const room = useRoomStore()
 const route = useRoute()
@@ -40,6 +41,7 @@ async function leave() {
     <LobbyScreen v-if="room.state.phase === 'lobby'" @leave="leave" />
     <GameScreen v-else-if="room.state.phase === 'playing'" @leave="leave" />
     <EndScreen v-else @leave="leave" />
+    <ChatDock />
   </template>
 
   <section v-else-if="room.closedReason" class="panel stack">

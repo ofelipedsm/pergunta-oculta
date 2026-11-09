@@ -8,7 +8,8 @@ import {
   type Question,
   type RoomConfig,
 } from '@po/shared';
-import type { EngineDeps, EngineResult, Player, Room, Round, Toast } from './model';
+import type { ChatMessage } from '@po/shared';
+import type { ChatTone, EngineDeps, EngineResult, Player, Room, Round, Toast } from './model';
 
 const COLORS = ['#ff7a8a', '#5fd0c5', '#b59cff', '#ffb86b', '#7bd88f', '#6bb8ff', '#ff9ad5', '#e8e46b'];
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ'; // sem I, L e O
@@ -52,9 +53,12 @@ export class GameEngine {
       turnIndex: 0,
       masterIndex: 0,
       roundCount: 0,
+      chat: [],
+      chatSeq: 0,
       createdAt: now,
       lastActivity: now,
     };
+    this.log(room, `${player.name} criou a sala`);
     return { room, player };
   }
 
@@ -67,6 +71,7 @@ export class GameEngine {
       const p = room.players.find((x) => x.id === input.playerId);
       if (p && p.token === input.token) {
         p.left = false;
+        if (!p.connected) this.log(room, `${p.name} voltou`);
         const toasts = this.setConnected(room, p.id, true);
         this.touch(room);
         return { ok: true, toasts, data: { player: p, reconnected: true } };
@@ -79,6 +84,7 @@ export class GameEngine {
 
     const player = this.makePlayer(this.uniqueName(room, name), room.players.length);
     room.players.push(player);
+    this.log(room, `${player.name} entrou na sala`);
     this.touch(room);
     return {
       ok: true,
@@ -99,6 +105,7 @@ export class GameEngine {
     const p = this.player(room, playerId);
     if (!p) return fail('NOT_IN_ROOM', 'Você não está nesta sala');
     const toasts: Toast[] = [{ kind: 'info', text: `${p.name} saiu da sala` }];
+    this.log(room, `${p.name} saiu da sala`);
 
     if (room.phase === 'lobby') {
       room.players = room.players.filter((x) => x.id !== playerId);
@@ -116,13 +123,23 @@ export class GameEngine {
   transferHost(room: Room): Player | undefined {
     const candidates = this.active(room).filter((p) => p.id !== room.hostId);
     const next = candidates.find((p) => p.connected) ?? candidates[0];
-    if (next) room.hostId = next.id;
+    if (next) {
+      room.hostId = next.id;
+      this.log(room, `${next.name} agora é o dono da sala`);
+    }
     return next;
   }
 
   updateConfig(room: Room, actorId: string, patch: Partial<RoomConfig>): EngineResult {
     const check = this.requireHost(room, actorId) ?? this.requireRoomPhase(room, 'lobby');
     if (check) return check;
+    const modeLabel = { bank: 'Banco', master: 'Mestre', mixed: 'Misto' } as const;
+    const who = this.name(room, actorId);
+    if (patch.mode && patch.mode !== room.config.mode) {
+      this.log(room, `${who} mudou o modo para ${modeLabel[patch.mode]}`);
+    } else if (Object.keys(patch).length) {
+      this.log(room, `${who} ajustou as regras`);
+    }
     room.config = { ...room.config, ...patch };
     this.touch(room);
     return { ok: true, toasts: [], data: undefined };
@@ -135,6 +152,7 @@ export class GameEngine {
     const target = this.player(room, targetId);
     if (!target) return fail('NOT_IN_ROOM', 'Jogador não está na sala');
     room.players = room.players.filter((p) => p.id !== targetId);
+    this.log(room, `${target.name} foi removido da sala`);
     return { ok: true, toasts: [{ kind: 'info', text: `${target.name} foi removido` }], data: undefined };
   }
 
@@ -158,6 +176,7 @@ export class GameEngine {
     room.winnerIds = undefined;
     for (const p of room.players) p.score = 0;
     room.phase = 'playing';
+    this.log(room, 'A partida começou!');
     const toasts = this.startRound(room);
     this.touch(room);
     return { ok: true, toasts: [{ kind: 'info', text: 'A partida começou!' }, ...toasts], data: undefined };
@@ -187,7 +206,7 @@ export class GameEngine {
     r!.words = words;
     r!.answers = answers;
     r!.category = input.category?.trim() || undefined;
-    this.log(r!, `${this.name(room, actorId)} enviou a pergunta`);
+    this.log(room, `${this.name(room, actorId)} enviou a pergunta`);
     this.toChoosing(room);
     this.touch(room);
     return { ok: true, toasts: [], data: undefined };
@@ -208,7 +227,7 @@ export class GameEngine {
     r!.lastMiss = undefined; // a janela de validação do dono fecha quando uma palavra nova é aberta
     r!.phase = 'guessing';
     r!.deadline = this.deadline(room.config.turnTimeoutSec);
-    this.log(r!, `${this.name(room, actorId)} abriu a palavra ${index + 1}`);
+    this.log(room, `${this.name(room, actorId)} abriu a palavra ${index + 1}: “${r!.words[index]}”`);
     this.touch(room);
     return { ok: true, toasts: [], data: undefined };
   }
@@ -230,7 +249,7 @@ export class GameEngine {
       r!.pending = { kind: 'answer', playerId: actorId, text: clean, hiddenAtGuess: hidden };
       r!.phase = 'judging';
       r!.deadline = this.deadline(room.config.judgeTimeoutSec);
-      this.log(r!, `${this.name(room, actorId)} chutou "${clean}". Aguardando o mestre`);
+      this.log(room, `${this.name(room, actorId)} chutou “${clean}”. ${this.name(room, r!.masterId)} está julgando`);
       this.touch(room);
       return { ok: true, toasts: [], data: undefined };
     }
@@ -250,7 +269,11 @@ export class GameEngine {
     if (r.phase === 'judging' && r.pending) {
       if (actorId !== this.judgeId(room)) return fail('NOT_JUDGE', 'Só o mestre decide este chute');
       if (r.pending.playerId === actorId) return fail('CANNOT_JUDGE_SELF', 'Você não pode julgar o próprio chute');
-      this.log(r, `${this.name(room, actorId)} ${accept ? 'aceitou' : 'recusou'} "${r.pending.text}"`);
+      this.log(
+        room,
+        `${this.name(room, actorId)} ${accept ? 'aceitou' : 'recusou'} “${r.pending.text}”`,
+        accept ? 'hit' : 'miss',
+      );
       return { ok: true, toasts: this.resolvePending(room, accept), data: undefined };
     }
 
@@ -263,7 +286,7 @@ export class GameEngine {
         this.touch(room);
         return { ok: true, toasts: [], data: undefined };
       }
-      this.log(r, `${this.name(room, actorId)} validou o chute "${miss.text}"`);
+      this.log(room, `${this.name(room, actorId)} validou o chute “${miss.text}”`, 'hit');
       return { ok: true, toasts: this.hit(room, miss.playerId, miss.points), data: undefined };
     }
 
@@ -280,6 +303,7 @@ export class GameEngine {
 
     if (r!.source === 'master' && this.isActive(room, r!.masterId)) {
       r!.pending = { kind: 'bonus', playerId: actorId, text: text.trim(), hiddenAtGuess: r!.hit.hiddenAtHit };
+      this.log(room, `${this.name(room, actorId)} tentou o ponto extra. ${this.name(room, r!.masterId)} está julgando`);
       r!.phase = 'judging';
       r!.deadline = this.deadline(room.config.judgeTimeoutSec);
       this.touch(room);
@@ -294,6 +318,7 @@ export class GameEngine {
     if (check) return check;
     if (r!.hit?.playerId !== actorId) return fail('NOT_YOUR_TURN', 'Só quem acertou decide o ponto extra');
     r!.hit.bonus = 'skipped';
+    this.log(room, `${this.name(room, actorId)} não tentou o ponto extra`);
     this.finishRound(room);
     return { ok: true, toasts: [], data: undefined };
   }
@@ -328,8 +353,20 @@ export class GameEngine {
     const check = this.requireHost(room, actorId);
     if (check) return check;
     if (room.phase !== 'playing') return fail('WRONG_PHASE', 'A partida não está em andamento');
+    this.log(room, `${this.name(room, actorId)} encerrou a partida`);
     this.finishGame(room);
     return { ok: true, toasts: [{ kind: 'info', text: 'Fim de jogo!' }], data: undefined };
+  }
+
+  /** Mensagem de um jogador no chat. Vale em qualquer fase, inclusive com a partida pausada. */
+  chat(room: Room, actorId: string, text: string): EngineResult {
+    const p = this.player(room, actorId);
+    if (!p) return fail('NOT_IN_ROOM', 'Você não está nesta sala');
+    const clean = text.replace(/\s+/g, ' ').trim().slice(0, LIMITS.chatMax);
+    if (!clean) return fail('INVALID', 'Mensagem vazia');
+    this.pushChat(room, { kind: 'user', playerId: p.id, text: clean });
+    this.touch(room);
+    return { ok: true, toasts: [], data: undefined };
   }
 
   /** Depois do fim de jogo: volta ao lobby com os mesmos jogadores e pontos zerados. */
@@ -342,6 +379,7 @@ export class GameEngine {
     room.round = undefined;
     room.winnerIds = undefined;
     room.roundCount = 0;
+    this.log(room, `${this.name(room, actorId)} voltou para o lobby. Bora de novo?`);
     this.touch(room);
     return { ok: true, toasts: [], data: undefined };
   }
@@ -358,7 +396,7 @@ export class GameEngine {
         Object.assign(r, this.bankRoundFields(q));
         r.source = 'bank';
         r.masterId = undefined;
-        this.log(r, `${master} não enviou a pergunta a tempo. Usando uma do banco`);
+        this.log(room, `${master} não enviou a pergunta a tempo. Usando uma do banco`);
         this.toChoosing(room);
         return [{ kind: 'info', text: `${master} não enviou a pergunta a tempo` }];
       }
@@ -366,7 +404,7 @@ export class GameEngine {
       case 'guessing':
         return r.turnPlayerId ? this.miss(room, r.turnPlayerId, null) : null;
       case 'judging':
-        this.log(r, 'Tempo de julgamento esgotado: chute recusado');
+        this.log(room, 'Tempo de julgamento esgotado: chute recusado');
         return this.resolvePending(room, false);
       case 'bonus':
         if (r.hit) r.hit.bonus = 'skipped';
@@ -407,7 +445,7 @@ export class GameEngine {
           deadline: this.deadline(room.config.writeTimeoutSec),
           log: [],
         };
-        this.log(room.round, `${master.name} está criando a pergunta`);
+        this.log(room, `Rodada ${room.roundCount}: ${master.name} é o mestre e está criando a pergunta`);
         return [{ kind: 'info', text: `Rodada ${room.roundCount}: ${master.name} é o mestre` }];
       }
     }
@@ -421,6 +459,11 @@ export class GameEngine {
       revealed: [],
       log: [],
     };
+    const levelLabel = { 1: 'fácil', 2: 'médio', 3: 'difícil' } as const;
+    this.log(
+      room,
+      `Rodada ${room.roundCount}: ${q.category}, ${levelLabel[q.level]}, ${room.round.words.length} palavras`,
+    );
     this.toChoosing(room);
     return [];
   }
@@ -457,6 +500,7 @@ export class GameEngine {
         if (p.left || p.id === r.masterId || (onlyConnected && !p.connected)) continue;
         room.turnIndex = (idx + 1) % n;
         r.turnPlayerId = p.id;
+        this.log(room, `Vez de ${p.name}`);
         return;
       }
     }
@@ -478,14 +522,14 @@ export class GameEngine {
       room.paused = { remainingMs: r?.deadline ? Math.max(0, r.deadline - now) : undefined };
       if (r) {
         r.deadline = undefined;
-        this.log(r, 'Partida pausada: aguardando jogadores');
+        this.log(room, 'Partida pausada: aguardando jogadores');
       }
       toasts.push({ kind: 'info', text: 'Partida pausada: aguardando jogadores' });
     } else if (online >= LIMITS.minPlayers && room.paused) {
       const remaining = room.paused.remainingMs;
       room.paused = undefined;
       if (r && remaining !== undefined) r.deadline = now + Math.max(remaining, RESUME_MIN_MS);
-      if (r) this.log(r, 'Partida retomada');
+      if (r) this.log(room, 'Partida retomada');
       toasts.push({ kind: 'info', text: 'Partida retomada' });
     }
 
@@ -525,7 +569,15 @@ export class GameEngine {
     r.hit = { playerId, points, hiddenAtHit: points, bonusAllowed, masterPoints };
     r.pending = undefined;
     r.lastMiss = undefined;
-    this.log(r, `${p.name} acertou e ganhou ${points} ponto${points === 1 ? '' : 's'}`);
+    this.log(
+      room,
+      `${p.name} acertou: “${r.answers[0]}” e ganhou ${points} ponto${points === 1 ? '' : 's'}`,
+      'hit',
+    );
+    if (masterPoints !== undefined) {
+      this.log(room, `${this.name(room, r.masterId)} (mestre) ganhou ${masterPoints} ponto${masterPoints === 1 ? '' : 's'}`);
+    }
+    if (bonusAllowed) this.log(room, `${p.name} pode tentar o ponto extra escrevendo a pergunta`);
 
     if (bonusAllowed) {
       r.phase = 'bonus';
@@ -543,13 +595,13 @@ export class GameEngine {
     const name = this.name(room, playerId);
     const hidden = this.hidden(r);
     r.pending = undefined;
-    this.log(r, text === null ? `${name} perdeu a vez` : `${name} chutou "${text}" e errou`);
+    this.log(room, text === null ? `${name} perdeu a vez` : `${name} chutou “${text}” e errou`, 'miss');
     const toasts: Toast[] = [
       { kind: 'miss', text: text === null ? `${name} perdeu a vez` : `${name} errou: ${text}` },
     ];
 
     if (hidden === 0) {
-      this.log(r, 'Todas as palavras abertas e ninguém acertou');
+      this.log(room, 'Todas as palavras abertas e ninguém acertou');
       this.finishRound(room);
       toasts.push({ kind: 'info', text: 'Ninguém acertou' });
       return toasts;
@@ -579,13 +631,15 @@ export class GameEngine {
     const p = room.players.find((x) => x.id === hit.playerId)!;
     hit.bonus = ok ? 'ok' : 'fail';
     if (ok) p.score += 1;
-    this.log(r, ok ? `${p.name} acertou a pergunta: +1 ponto extra` : `${p.name} errou a pergunta`);
+    this.log(room, ok ? `${p.name} acertou a pergunta: +1 ponto extra` : `${p.name} errou a pergunta`, ok ? 'hit' : 'miss');
     this.finishRound(room);
     return ok ? [{ kind: 'hit', text: `${p.name} ganhou o ponto extra!` }] : [];
   }
 
   private finishRound(room: Room): void {
     const r = room.round!;
+    // Só aqui a pergunta inteira pode aparecer no chat.
+    this.log(room, `Fim da rodada. Pergunta: “${r.question}?” Resposta: ${r.answers[0]}`);
     r.phase = 'revealed';
     r.deadline = undefined;
     r.pending = undefined;
@@ -601,6 +655,12 @@ export class GameEngine {
     }
     const best = Math.max(...room.players.map((p) => p.score));
     room.winnerIds = room.players.filter((p) => p.score === best).map((p) => p.id);
+    const names = room.winnerIds.map((id) => this.name(room, id));
+    this.log(
+      room,
+      names.length === 1 ? `Fim de jogo! ${names[0]} venceu com ${best} pontos` : `Fim de jogo! Empate entre ${names.join(' e ')}`,
+      'hit',
+    );
     this.touch(room);
   }
 
@@ -688,9 +748,23 @@ export class GameEngine {
     return this.deps.now() + seconds * 1000;
   }
 
-  private log(r: Round, text: string): void {
-    r.log.unshift({ at: this.deps.now(), text });
-    if (r.log.length > LOG_MAX) r.log.length = LOG_MAX;
+  /**
+   * Registra um acontecimento: vai para o histórico da rodada e para o chat como mensagem
+   * automática. Cuidado: nada aqui pode revelar a pergunta ou a resposta antes da hora.
+   */
+  private log(room: Room, text: string, tone: ChatTone = 'info'): void {
+    const r = room.round;
+    if (r) {
+      r.log.unshift({ at: this.deps.now(), text });
+      if (r.log.length > LOG_MAX) r.log.length = LOG_MAX;
+    }
+    this.pushChat(room, { kind: 'system', text, tone });
+  }
+
+  private pushChat(room: Room, msg: Omit<ChatMessage, 'id' | 'at'>): void {
+    room.chatSeq += 1;
+    room.chat.push({ id: room.chatSeq, at: this.deps.now(), ...msg });
+    if (room.chat.length > LIMITS.chatHistory) room.chat.splice(0, room.chat.length - LIMITS.chatHistory);
   }
 
   private touch(room: Room): void {

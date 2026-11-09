@@ -209,6 +209,19 @@ describe('servidor em tempo real', () => {
   });
 });
 
+describe('chat pelo socket', () => {
+  it('mensagem de um jogador chega aos outros, junto com as automáticas', async () => {
+    const ana = await connect();
+    const bia = await connect();
+    const sAna = await call<Session>(ana, 'room:create', { name: 'Ana' });
+    await call<Session>(bia, 'room:join', { code: sAna.code, name: 'Bia' });
+    await call(bia, 'chat:send', { text: 'bora modo Mestre!' });
+    const s = await until(ana, (st) => st.chat.some((m) => m.kind === 'user' && m.text === 'bora modo Mestre!'));
+    expect(s.chat.some((m) => m.kind === 'system' && m.text === 'Bia entrou na sala')).toBe(true);
+    expect(await tryCall(bia, 'chat:send', { text: '' })).toMatchObject({ ok: false, code: 'INVALID' });
+  });
+});
+
 describe('limpeza de salas', () => {
   it('remove só salas sem ninguém conectado há mais tempo que o limite', () => {
     const svc = new RoomsService({}, { idleRoomMs: 1000, sweepEveryMs: 1_000_000 });

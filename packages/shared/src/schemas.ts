@@ -55,6 +55,7 @@ export const masterSubmitSchema = z.object({
 export const openWordSchema = z.object({ index: z.number().int().min(0).max(LIMITS.questionMaxWords) });
 export const guessSchema = z.object({ text: z.string().trim().min(1).max(LIMITS.guessMax) });
 export const judgeSchema = z.object({ accept: z.boolean() });
+export const chatSchema = z.object({ text: z.string().trim().min(1).max(LIMITS.chatMax) });
 export const bonusSchema = z.object({ text: z.string().trim().min(1).max(LIMITS.questionMaxChars) });
 
 export type CreateRoomInput = z.infer<typeof createRoomSchema>;

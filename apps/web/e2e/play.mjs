@@ -93,6 +93,18 @@ try {
   await ana.page.waitForSelector('[data-test=qr] svg')
   if (SHOTS) await ana.page.locator('[data-test=qr] .qr-img').screenshot({ path: `${SHOTS}/qr.png` })
   step('Convite: link copiado, WhatsApp com o link e QR code na tela')
+  // ---------------- chat no lobby
+  await bia.page.click('[data-test=chat-open]')
+  await bia.page.fill('[data-test=chat-input]', 'Bora modo Mestre depois?')
+  await bia.page.click('[data-test=chat-send]')
+  await ana.page.waitForSelector('[data-test=chat-unread]:has-text("1")')
+  await ana.page.click('[data-test=chat-open]')
+  await ana.page.waitForSelector('[data-test=chat-user]:has-text("Bora modo Mestre depois?")')
+  await ana.page.waitForSelector('[data-test=chat-system]:has-text("Caio entrou na sala")')
+  await shot(ana, '00-chat-lobby')
+  await ana.page.click('[data-test=chat] .close')
+  await bia.page.click('[data-test=chat] .close')
+  step('Chat no lobby: Bia mandou mensagem e Ana viu o aviso de não lida')
   await shot(ana, '01-lobby-dono')
   await shot(bia, '02-lobby-convidado')
 
@@ -117,6 +129,12 @@ try {
   // ponto extra só aparece se faltavam palavras suficientes
   await t.page.waitForSelector('[data-test=action][data-phase=bonus], [data-test=action][data-phase=revealed]')
   step(`Ana validou o chute de ${t.name}`)
+  await caio.page.click('[data-test=chat-open]')
+  await caio.page.waitForSelector(`[data-test=chat-system]:has-text("Ana validou o chute")`)
+  await caio.page.waitForSelector('[data-test=chat-system]:has-text("Vez de")')
+  await shot(caio, '05b-chat-partida')
+  await caio.page.click('[data-test=chat] .close')
+  step('Chat narra a partida: vez de cada um, chutes e validação')
 
   if ((await phase(t)) === 'bonus') {
     await t.page.click('[data-test=bonus-skip]')

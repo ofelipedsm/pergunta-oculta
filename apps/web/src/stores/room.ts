@@ -64,7 +64,10 @@ export const useRoomStore = defineStore('room', () => {
     state.value = s
     closedReason.value = null
   })
-  socket.on('room:toast', (t) => pushToast(t.kind, t.text))
+  // Avisos informativos já aparecem no chat; o toast fica só para acertos e erros.
+  socket.on('room:toast', (t) => {
+    if (t.kind !== 'info') pushToast(t.kind, t.text)
+  })
   socket.on('room:closed', ({ reason }) => {
     closedReason.value = reason
     state.value = null
@@ -156,6 +159,7 @@ export const useRoomStore = defineStore('room', () => {
   const skipBonus = () => act('bonus:skip')
   const nextRound = () => act('round:next')
   const skipTurn = () => act('turn:skip')
+  const sendChat = (text: string) => act('chat:send', { text })
 
   return {
     state,
@@ -192,5 +196,6 @@ export const useRoomStore = defineStore('room', () => {
     skipBonus,
     nextRound,
     skipTurn,
+    sendChat,
   }
 })

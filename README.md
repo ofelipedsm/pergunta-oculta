@@ -16,7 +16,7 @@ apps/
     src/rooms/      gateway Socket.IO + serviço das salas em memória
 packages/
   shared/           tipos, contrato de eventos, schemas zod, normalização de respostas
-  question-bank/    313 perguntas. Só o server importa: as respostas nunca vão para o front
+  question-bank/    454 perguntas. Só o server importa: as respostas nunca vão para o front
 ```
 
 O servidor é a única fonte da verdade. O celular recebe só `room:state`, montado por `toPublicState(room, viewerId)`, que nunca inclui pergunta ou respostas para quem está adivinhando.
@@ -69,6 +69,7 @@ Front na Vercel, servidor no Render (grátis) ou no Fly.io. Passo a passo comple
 - `src/stores/room.ts`: guarda o `room:state` e transforma toques em eventos. Nenhuma regra mora no front.
 - `src/session.ts`: código da sala, `playerId` e `token` no `localStorage`. Recarregar a página ou perder a rede devolve o jogador à partida.
 - Rotas: `/` (criar ou entrar) e `/sala/:code` (lobby, jogo e fim).
+- Chat da sala (`ChatDock`): fixo à direita no computador e em botão flutuante no celular, do lobby ao fim de jogo. Além das mensagens dos jogadores, o jogo narra tudo ali: vez de cada um, palavras abertas, chutes, julgamentos, acertos e o fim da rodada.
 - Convite no lobby: copiar o link, mandar pelo WhatsApp (mensagem pronta), compartilhar pelo menu do celular ou mostrar um QR code para os amigos apontarem a câmera.
 - `vercel.json` já reescreve qualquer rota para o `index.html`.
 
@@ -81,6 +82,7 @@ Front na Vercel, servidor no Render (grátis) ou no Fly.io. Passo a passo comple
 - Menos de 2 jogadores conectados: a partida pausa e o cronômetro congela. Quando alguém volta, retoma com o tempo que restava (no mínimo 15 s).
 - A vez pula quem está desconectado. Mestre que cai enquanto escreve tem 30 s para voltar; depois a rodada usa uma pergunta do banco.
 - Sala sem ninguém conectado por 30 min é removida.
+- `chat:send` (qualquer jogador, em qualquer fase): mensagem de até 200 caracteres. O servidor guarda as últimas 120 mensagens da sala e manda junto no `room:state`. As mensagens automáticas nunca revelam a pergunta ou a resposta antes da hora; isso tem teste.
 - `game:restart` (dono, depois do fim de jogo) volta ao lobby com os mesmos jogadores e pontos zerados.
 
 ## Regras que o núcleo já aplica

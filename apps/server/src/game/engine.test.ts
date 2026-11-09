@@ -427,6 +427,73 @@ describe('conexão durante a partida', () => {
   });
 });
 
+describe('chat', () => {
+  it('aceita mensagens de jogadores no lobby, no jogo e com a partida pausada', () => {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine, ['Ana', 'Bia']);
+    ok(engine.chat(room, ids[1]!, '  vamos   de modo Mestre?  '));
+    const last = room.chat.at(-1)!;
+    expect(last).toMatchObject({ kind: 'user', playerId: ids[1], text: 'vamos de modo Mestre?' });
+
+    ok(engine.start(room, ids[0]!));
+    engine.setConnected(room, ids[1]!, false);
+    expect(room.paused).toBeDefined();
+    ok(engine.chat(room, ids[0]!, 'volta logo!'));
+    expect(engine.chat(room, ids[0]!, '   ')).toMatchObject({ ok: false, code: 'INVALID' });
+    expect(engine.chat(room, 'intruso', 'oi')).toMatchObject({ ok: false, code: 'NOT_IN_ROOM' });
+  });
+
+  it('corta mensagens longas e guarda só o histórico recente', () => {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine, ['Ana', 'Bia']);
+    ok(engine.chat(room, ids[0]!, 'x'.repeat(500)));
+    expect(room.chat.at(-1)!.text).toHaveLength(200);
+    for (let i = 0; i < 200; i++) ok(engine.chat(room, ids[0]!, `msg ${i}`));
+    expect(room.chat).toHaveLength(120);
+    expect(room.chat.at(-1)!.text).toBe('msg 199');
+  });
+
+  it('narra a partida com mensagens automáticas', () => {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine);
+    ok(engine.updateConfig(room, ids[0]!, { mode: 'mixed' }));
+    ok(engine.start(room, ids[0]!));
+    ok(engine.openWord(room, ids[0]!, 0));
+    ok(engine.guess(room, ids[0]!, 'errado'));
+    const texts = room.chat.filter((m) => m.kind === 'system').map((m) => m.text);
+    expect(texts).toContain('Ana mudou o modo para Misto');
+    expect(texts).toContain('A partida começou!');
+    expect(texts).toContain('Vez de Ana');
+    expect(texts).toContain(`Ana abriu a palavra 1: “${round(room).words[0]}”`);
+    expect(texts).toContain('Ana chutou “errado” e errou');
+    expect(texts).toContain('Vez de Bia');
+    expect(room.chat.find((m) => m.text.includes('errou'))?.tone).toBe('miss');
+  });
+
+  it('as mensagens automáticas não revelam pergunta nem resposta antes da hora', () => {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine);
+    ok(engine.updateConfig(room, ids[0]!, { bonusEnabled: false }));
+    ok(engine.start(room, ids[0]!));
+    const r = round(room);
+    // erra até sobrar uma palavra escondida
+    for (let i = 0; i < r.words.length - 1; i++) {
+      const p = r.turnPlayerId!;
+      ok(engine.openWord(room, p, i));
+      ok(engine.guess(room, p, `chute ${i}`));
+    }
+    const before = JSON.stringify(toPublicState(room, ids[1]!).chat).toLowerCase();
+    for (const a of r.answers) expect(before).not.toContain(a.toLowerCase());
+    expect(before).not.toContain(r.question.toLowerCase());
+
+    const p = r.turnPlayerId!;
+    ok(engine.openWord(room, p, r.words.length - 1));
+    ok(engine.guess(room, p, r.answers[0]!));
+    const after = JSON.stringify(toPublicState(room, ids[1]!).chat);
+    expect(after).toContain(r.question);
+  });
+});
+
 describe('jogar de novo', () => {
   it('volta ao lobby com pontos zerados, sem quem saiu', () => {
     const { engine } = setup();

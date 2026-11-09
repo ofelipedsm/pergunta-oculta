@@ -1,4 +1,6 @@
 import type {
+  ChatMessage,
+  ChatTone,
   ErrorCode,
   Level,
   Question,
@@ -85,9 +87,14 @@ export interface Room {
   winnerIds?: string[];
   /** Partida pausada por falta de jogadores conectados; guarda o tempo que restava na fase. */
   paused?: { remainingMs?: number };
+  /** Chat da sala, com as mensagens automáticas do jogo. Nunca contém segredo da rodada. */
+  chat: ChatMessage[];
+  chatSeq: number;
   createdAt: number;
   lastActivity: number;
 }
+
+export type { ChatTone };
 
 export interface Toast {
   kind: ToastKind;

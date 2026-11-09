@@ -63,6 +63,8 @@ export const LIMITS = {
   answersMax: 5,
   answerMax: 60,
   roomCodeLength: 4,
+  chatMax: 200,
+  chatHistory: 120,
 } as const;
 
 export const DEFAULT_CONFIG: RoomConfig = {
@@ -132,6 +134,18 @@ export interface PublicRound {
   log: { at: number; text: string }[];
 }
 
+export type ChatTone = 'info' | 'hit' | 'miss';
+
+/** Mensagem do chat da sala: de um jogador ou automática do jogo (kind = system). */
+export interface ChatMessage {
+  id: number;
+  at: number;
+  kind: 'user' | 'system';
+  playerId?: string;
+  text: string;
+  tone?: ChatTone;
+}
+
 export interface PublicRoomState {
   code: string;
   me: { id: string; isHost: boolean; isMaster: boolean };
@@ -143,6 +157,8 @@ export interface PublicRoomState {
   players: PublicPlayer[];
   round?: PublicRound;
   winnerIds?: string[];
+  /** Histórico do chat da sala (mais antigas primeiro). */
+  chat: ChatMessage[];
   /** Quem decide o chute pendente agora (mestre, ou o dono se o mestre estiver fora). */
   judgeId?: string;
 }
