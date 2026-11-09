@@ -172,15 +172,20 @@ describe('modo Banco', () => {
     expect(r.phase).toBe('revealed');
   });
 
-  it('erro com todas as palavras abertas encerra a rodada sem pontos', () => {
+  it('com todas as palavras abertas, a rodada segue só com chutes', () => {
     const r = round(room);
     for (let i = 0; i < r.words.length; i++) {
       const p = r.turnPlayerId!;
       ok(engine.openWord(room, p, i));
       ok(engine.guess(room, p, 'errado'));
     }
+    expect(r.phase).toBe('guessing'); // ninguém escolhe palavra: só chuta
+    const p = r.turnPlayerId!;
+    ok(engine.guess(room, p, 'outro erro'));
+    expect(r.turnPlayerId).not.toBe(p);
+    ok(engine.guess(room, r.turnPlayerId!, r.answers[0]!));
+    expect(r.hit?.points).toBe(0);
     expect(r.phase).toBe('revealed');
-    expect(room.players.every((p) => p.score === 0)).toBe(true);
   });
 
   it('o dono valida o último erro de outro jogador antes de abrir nova palavra', () => {
@@ -424,6 +429,103 @@ describe('conexão durante a partida', () => {
     expect(engine.onTimeout(room)).not.toBeNull();
     expect(round(room).source).toBe('bank');
     expect(round(room).phase).toBe('choosing');
+  });
+});
+
+describe('votação para pular a pergunta', () => {
+  /** Banco com 3 jogadores e todas as palavras abertas, sem ninguém acertar. */
+  function allOpen() {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine);
+    ok(engine.updateConfig(room, ids[0]!, { bonusEnabled: false }));
+    ok(engine.start(room, ids[0]!));
+    const r = round(room);
+    for (let i = 0; i < r.words.length; i++) {
+      const p = r.turnPlayerId!;
+      ok(engine.openWord(room, p, i));
+      if (i < r.words.length - 1) ok(engine.guess(room, p, 'errado'));
+    }
+    return { engine, room, ids, r };
+  }
+
+  it('só abre com todas as palavras à mostra', () => {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine);
+    ok(engine.start(room, ids[0]!));
+    expect(engine.skipVoteAvailable(room)).toBe(false);
+    expect(engine.startSkipVote(room, ids[0]!)).toMatchObject({ ok: false, code: 'WRONG_PHASE' });
+  });
+
+  it('todos aceitam: pula sem ninguém pontuar e mostra a pergunta', () => {
+    const { engine, room, ids, r } = allOpen();
+    expect(engine.skipVoteAvailable(room)).toBe(true);
+    ok(engine.startSkipVote(room, ids[1]!));
+    expect(r.skipVote?.votes).toEqual({ [ids[1]!]: true });
+    expect(engine.startSkipVote(room, ids[2]!)).toMatchObject({ ok: false });
+    ok(engine.voteSkip(room, ids[0]!, true));
+    expect(r.phase).not.toBe('revealed');
+    ok(engine.voteSkip(room, ids[2]!, true));
+    expect(r.phase).toBe('revealed');
+    expect(r.hit).toBeUndefined();
+    expect(r.skipped).toBe(true);
+    expect(room.players.every((p) => p.score === 0)).toBe(true);
+    expect(room.chat.some((m) => m.text.includes('pergunta pulada'))).toBe(true);
+  });
+
+  it('um recusa: os chutes seguem e nova votação só depois de uma volta', () => {
+    const { engine, room, ids, r } = allOpen();
+    ok(engine.startSkipVote(room, ids[0]!));
+    ok(engine.voteSkip(room, ids[1]!, false));
+    expect(r.skipVote).toBeUndefined();
+    expect(r.phase).toBe('guessing');
+    expect(engine.skipVoteAvailable(room)).toBe(false);
+    expect(engine.voteSkip(room, ids[2]!, true)).toMatchObject({ ok: false, code: 'WRONG_PHASE' });
+
+    // uma volta completa de chutes (3 jogadores)
+    for (let k = 0; k < 3; k++) {
+      expect(engine.skipVoteAvailable(room)).toBe(false);
+      ok(engine.guess(room, r.turnPlayerId!, `erro ${k}`));
+    }
+    expect(engine.skipVoteAvailable(room)).toBe(true);
+    ok(engine.startSkipVote(room, ids[2]!));
+  });
+
+  it('votação aberta expira quando a vez passa sem todos aceitarem', () => {
+    const { engine, room, ids, r } = allOpen();
+    ok(engine.startSkipVote(room, ids[0]!));
+    ok(engine.guess(room, r.turnPlayerId!, 'mais um erro'));
+    expect(r.skipVote).toBeUndefined();
+    expect(engine.skipVoteAvailable(room)).toBe(false);
+  });
+
+  it('acerto durante a votação encerra a rodada normalmente', () => {
+    const { engine, room, ids, r } = allOpen();
+    ok(engine.startSkipVote(room, ids[1]!));
+    ok(engine.guess(room, r.turnPlayerId!, r.answers[0]!));
+    expect(r.phase).toBe('revealed');
+    expect(r.skipVote).toBeUndefined();
+  });
+
+  it('no modo Mestre o mestre não vota, e quem cai deixa de contar', () => {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine);
+    ok(engine.updateConfig(room, ids[0]!, { mode: 'master', bonusEnabled: false }));
+    ok(engine.start(room, ids[0]!));
+    ok(engine.submitQuestion(room, ids[0]!, { question: 'Qual fruta amarela o macaco adora comer', answers: ['banana'] }));
+    const r = round(room);
+    for (let i = 0; i < r.words.length; i++) {
+      const p = r.turnPlayerId!;
+      ok(engine.openWord(room, p, i));
+      if (i < r.words.length - 1) {
+        ok(engine.guess(room, p, 'pera'));
+        ok(engine.judge(room, ids[0]!, false));
+      }
+    }
+    expect(engine.startSkipVote(room, ids[0]!)).toMatchObject({ ok: false, code: 'NOT_YOUR_TURN' });
+    ok(engine.startSkipVote(room, ids[1]!));
+    expect(r.skipVote?.voters).toEqual([ids[1], ids[2]]);
+    engine.setConnected(room, ids[2]!, false); // Caio cai: só sobra o voto da Bia, que já aceitou
+    expect(r.phase).toBe('revealed');
   });
 });
 

@@ -203,10 +203,74 @@ try {
   await bia.page.waitForSelector('[data-test=master-editor]')
   step('Rodada seguinte: Bia virou a mestre')
 
+  // ---------------- todas as palavras abertas: votação para pular
+  await ana.page.click('text=Encerrar partida')
+  await ana.page.click('[data-test=end-yes]')
+  await ana.page.click('[data-test=restart]')
+  await ana.page.waitForSelector('[data-test=start]')
+  // O lobby acabou de montar: se o primeiro toque se perder na troca de tela, toca de novo.
+  for (let k = 0; k < 3 && !(await ana.page.locator('[data-test=mode-bank].on').count()); k++) {
+    await ana.page.click('[data-test=mode-bank]')
+    await ana.page.waitForSelector('[data-test=mode-bank].on', { timeout: 2000 }).catch(() => {})
+  }
+  await ana.page.waitForSelector('[data-test=mode-bank].on')
+  await ana.page.click('[data-test=start]')
+  for (const p of all) await waitPhase(p, 'choosing')
+  /** Quem está com o campo de chute na tela. */
+  async function guesser(ms = 5000) {
+    const start = Date.now()
+    while (Date.now() - start < ms) {
+      for (const p of all) if (await p.page.locator('[data-test=guess-input]').count()) return p
+      await new Promise((r) => setTimeout(r, 50))
+    }
+    throw new Error('Ninguém está chutando')
+  }
+  // abre tudo errando, até não sobrar palavra escondida
+  for (;;) {
+    let opener = null
+    for (const p of all) if (await p.page.locator('.tile.clickable').count()) opener = p
+    if (!opener) break
+    await opener.page.locator('.tile.clickable').first().click()
+    await opener.page.fill('[data-test=guess-input]', 'nao sei')
+    await opener.page.click('[data-test=guess-send]')
+    await opener.page.waitForTimeout(80)
+  }
+  await ana.page.waitForSelector('[data-test=skip-start]')
+  await shot(ana, '12-tudo-aberto')
+  await ana.page.click('[data-test=skip-start]')
+  await bia.page.click('[data-test=skip-reject]')
+  await caio.page.waitForSelector('[data-test=chat-open]')
+  await ana.page.waitForSelector('text=Uma nova votação para pular só depois de uma volta')
+  step('Todas as palavras abertas: Ana propôs pular e Bia recusou; os chutes seguem')
+  for (let k = 0; k < 3; k++) {
+    const g = await guesser()
+    await g.page.fill('[data-test=guess-input]', `ainda nao ${k}`)
+    await g.page.click('[data-test=guess-send]')
+    await g.page.waitForTimeout(120)
+  }
+  await bia.page.waitForSelector('[data-test=skip-start]')
+  await bia.page.click('[data-test=skip-start]')
+  await ana.page.click('[data-test=skip-accept]')
+  await caio.page.click('[data-test=skip-accept]')
+  for (const p of all) await waitPhase(p, 'revealed')
+  const skipped = await caio.page.textContent('[data-test=round-result]')
+  if (!skipped.includes('Pergunta pulada')) throw new Error(`Resultado inesperado: ${skipped}`)
+  await shot(caio, '13-pulada')
+  step('Depois de uma volta, Bia propôs de novo, todos aceitaram e a pergunta foi pulada sem pontos')
+
   if (errors.length) throw new Error(`Erros no console:\n${errors.join('\n')}`)
   console.log('\nTudo certo.')
 } catch (e) {
   console.error(e)
+  for (const ctx of browser.contexts()) {
+    for (const pg of ctx.pages()) {
+      const toasts = await pg.locator('.toasts').innerText().catch(() => '')
+      const phase = await pg.locator('[data-test=action]').getAttribute('data-phase').catch(() => null)
+      console.error(`[${pg.url()}] fase=${phase} avisos=${toasts.replace(/\n/g, ' | ')}`)
+      const failDir = process.env.FAIL_SHOTS ?? SHOTS
+      if (failDir) await pg.screenshot({ path: `${failDir}/falha-${ctx.pages().indexOf(pg)}-${Date.now()}.png`, fullPage: true })
+    }
+  }
   if (errors.length) console.error(errors.join('\n'))
   process.exitCode = 1
 } finally {

@@ -160,6 +160,8 @@ export const useRoomStore = defineStore('room', () => {
   const nextRound = () => act('round:next')
   const skipTurn = () => act('turn:skip')
   const sendChat = (text: string) => act('chat:send', { text })
+  const startSkip = () => act('skip:start')
+  const voteSkip = (accept: boolean) => act('skip:vote', { accept })
 
   return {
     state,
@@ -197,5 +199,7 @@ export const useRoomStore = defineStore('room', () => {
     nextRound,
     skipTurn,
     sendChat,
+    startSkip,
+    voteSkip,
   }
 })

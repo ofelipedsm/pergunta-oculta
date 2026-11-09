@@ -98,7 +98,9 @@ export class GameEngine {
     const p = room.players.find((x) => x.id === playerId);
     if (!p) return [];
     p.connected = connected;
-    return this.updatePresence(room, playerId, connected);
+    const toasts = this.updatePresence(room, playerId, connected);
+    if (!connected) toasts.push(...this.checkSkipVote(room));
+    return toasts;
   }
 
   leave(room: Room, playerId: string): EngineResult {
@@ -358,6 +360,85 @@ export class GameEngine {
     return { ok: true, toasts: [{ kind: 'info', text: 'Fim de jogo!' }], data: undefined };
   }
 
+  /** Com todas as palavras abertas, quem adivinha pode propor pular a pergunta. */
+  startSkipVote(room: Room, actorId: string): EngineResult {
+    const r = room.round;
+    const check = this.requirePlaying(room, actorId);
+    if (check) return check;
+    if (!r || !this.skipVoteAvailable(room)) {
+      return fail('WRONG_PHASE', 'Só dá para propor pular com todas as palavras abertas, uma vez por volta');
+    }
+    const voters = this.skipVoters(room);
+    if (!voters.includes(actorId)) return fail('NOT_YOUR_TURN', 'Só quem está adivinhando vota');
+    r.skipVote = { startedBy: actorId, voters, votes: { [actorId]: true } };
+    this.log(room, `${this.name(room, actorId)} propôs pular a pergunta. Todos precisam aceitar`);
+    return { ok: true, toasts: this.checkSkipVote(room), data: undefined };
+  }
+
+  voteSkip(room: Room, actorId: string, accept: boolean): EngineResult {
+    const r = room.round;
+    const check = this.requirePlaying(room, actorId);
+    if (check) return check;
+    if (!r?.skipVote) return fail('WRONG_PHASE', 'Não há votação aberta');
+    if (!r.skipVote.voters.includes(actorId)) return fail('NOT_YOUR_TURN', 'Você não vota nesta pergunta');
+    if (actorId in r.skipVote.votes) return fail('INVALID', 'Você já votou');
+    r.skipVote.votes[actorId] = accept;
+    if (!accept) {
+      this.failSkipVote(room, `${this.name(room, actorId)} recusou`);
+      this.touch(room);
+      return { ok: true, toasts: [], data: undefined };
+    }
+    this.log(room, `${this.name(room, actorId)} aceitou pular`);
+    return { ok: true, toasts: this.checkSkipVote(room), data: undefined };
+  }
+
+  /** Votação disponível: tudo aberto, ninguém julgando, sem votação aberta e já passou uma volta desde a última. */
+  skipVoteAvailable(room: Room): boolean {
+    const r = room.round;
+    return (
+      room.phase === 'playing' &&
+      !room.paused &&
+      !!r &&
+      r.words.length > 0 &&
+      this.hidden(r) === 0 &&
+      r.phase === 'guessing' &&
+      !r.skipVote &&
+      r.allOpenTurns >= r.nextSkipVoteAt
+    );
+  }
+
+  /** Votam os jogadores ativos e conectados que estão adivinhando (o mestre fica de fora). */
+  private skipVoters(room: Room): string[] {
+    const masterId = room.round?.masterId;
+    return this.active(room)
+      .filter((p) => p.connected && p.id !== masterId)
+      .map((p) => p.id);
+  }
+
+  /** Todos os que ainda estão na sala aceitaram? Então pula sem pontos. */
+  private checkSkipVote(room: Room): Toast[] {
+    const r = room.round;
+    const vote = r?.skipVote;
+    if (!r || !vote) return [];
+    const stillHere = vote.voters.filter((id) => this.isActive(room, id));
+    if (stillHere.length && stillHere.every((id) => vote.votes[id] === true)) {
+      r.skipVote = undefined;
+      r.skipped = true;
+      this.log(room, 'Todos aceitaram: pergunta pulada, ninguém pontua');
+      this.finishRound(room);
+      return [{ kind: 'info', text: 'Pergunta pulada' }];
+    }
+    return [];
+  }
+
+  /** Votação recusada ou expirada: a rodada segue e outra só depois de uma volta completa. */
+  private failSkipVote(room: Room, reason: string): void {
+    const r = room.round!;
+    r.skipVote = undefined;
+    r.nextSkipVoteAt = r.allOpenTurns + Math.max(1, this.skipVoters(room).length);
+    this.log(room, `Pular recusado (${reason}). Os chutes continuam; nova votação depois de uma volta`, 'miss');
+  }
+
   /** Mensagem de um jogador no chat. Vale em qualquer fase, inclusive com a partida pausada. */
   chat(room: Room, actorId: string, text: string): EngineResult {
     const p = this.player(room, actorId);
@@ -443,6 +524,8 @@ export class GameEngine {
           phase: 'writing',
           revealed: [],
           deadline: this.deadline(room.config.writeTimeoutSec),
+          allOpenTurns: 0,
+          nextSkipVoteAt: 0,
           log: [],
         };
         this.log(room, `Rodada ${room.roundCount}: ${master.name} é o mestre e está criando a pergunta`);
@@ -457,6 +540,8 @@ export class GameEngine {
       ...this.bankRoundFields(q),
       phase: 'choosing',
       revealed: [],
+      allOpenTurns: 0,
+      nextSkipVoteAt: 0,
       log: [],
     };
     const levelLabel = { 1: 'fácil', 2: 'médio', 3: 'difícil' } as const;
@@ -483,7 +568,8 @@ export class GameEngine {
   /** Passa a vez para o próximo jogador elegível e abre a fase de escolha. */
   private toChoosing(room: Room): void {
     const r = room.round!;
-    r.phase = 'choosing';
+    // Com todas as palavras abertas não há o que escolher: a vez é só para chutar.
+    r.phase = this.hidden(r) === 0 && r.words.length > 0 ? 'guessing' : 'choosing';
     r.pending = undefined;
     this.advanceTurn(room);
     r.deadline = this.deadline(room.config.turnTimeoutSec);
@@ -601,12 +687,13 @@ export class GameEngine {
     ];
 
     if (hidden === 0) {
-      this.log(room, 'Todas as palavras abertas e ninguém acertou');
-      this.finishRound(room);
-      toasts.push({ kind: 'info', text: 'Ninguém acertou' });
-      return toasts;
+      // Tudo aberto: a rodada segue em voltas de chute até alguém acertar ou todos aceitarem pular.
+      r.allOpenTurns += 1;
+      if (r.skipVote) this.failSkipVote(room, 'a vez passou sem todos aceitarem');
+      r.lastMiss = undefined;
+    } else {
+      r.lastMiss = r.source === 'bank' && text !== null ? { playerId, text, points: hidden } : undefined;
     }
-    r.lastMiss = r.source === 'bank' && text !== null ? { playerId, text, points: hidden } : undefined;
     this.toChoosing(room);
     this.touch(room);
     return toasts;
@@ -641,6 +728,7 @@ export class GameEngine {
     // Só aqui a pergunta inteira pode aparecer no chat.
     this.log(room, `Fim da rodada. Pergunta: “${r.question}?” Resposta: ${r.answers[0]}`);
     r.phase = 'revealed';
+    r.skipVote = undefined;
     r.deadline = undefined;
     r.pending = undefined;
     r.lastMiss = undefined;

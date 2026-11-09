@@ -4,6 +4,7 @@ import { LIMITS } from '@po/shared'
 import { useRoomStore } from '@/stores/room'
 import MasterEditor from './MasterEditor.vue'
 import TextAction from './TextAction.vue'
+import SkipVote from './SkipVote.vue'
 
 const room = useRoomStore()
 const r = computed(() => room.round!)
@@ -12,6 +13,8 @@ const meId = computed(() => room.me?.id)
 const turnName = computed(() => name(r.value.turnPlayerId))
 const hit = computed(() => r.value.hit)
 const isHitter = computed(() => !!hit.value && hit.value.playerId === meId.value)
+/** Todas as palavras abertas: a rodada vira uma roda de chutes, com opção de pular. */
+const allOpen = computed(() => r.value.wordCount > 0 && r.value.revealed.length === r.value.wordCount)
 const canAdvance = computed(() => room.isHost || r.value.masterId === meId.value)
 
 /** Modo Banco: o dono pode validar o último erro de outra pessoa. */
@@ -57,7 +60,10 @@ const bonusLabel = computed(() => {
     <!-- Chutar -->
     <template v-else-if="r.phase === 'guessing'">
       <template v-if="room.isMyTurn">
-        <p class="prompt">Qual é a resposta? Se acertar agora, ganha <b>{{ room.hiddenCount }}</b> pts.</p>
+        <p v-if="allOpen" class="prompt">
+          <b>Sua vez de chutar.</b> Todas as palavras estão abertas: acertar não dá pontos, mas encerra a rodada.
+        </p>
+        <p v-else class="prompt">Qual é a resposta? Se acertar agora, ganha <b>{{ room.hiddenCount }}</b> pts.</p>
         <TextAction
           placeholder="Digite a resposta…"
           button="Chutar"
@@ -67,6 +73,7 @@ const bonusLabel = computed(() => {
         />
       </template>
       <p v-else class="prompt"><b>{{ turnName }}</b> está chutando…</p>
+      <SkipVote v-if="allOpen" />
     </template>
 
     <!-- Julgamento -->
@@ -115,7 +122,9 @@ const bonusLabel = computed(() => {
     <template v-else-if="r.phase === 'revealed'">
       <div class="result" data-test="round-result">
         <h3 v-if="hit">{{ name(hit.playerId) }} acertou! +{{ hit.points }}{{ hit.bonus === 'ok' ? ' +1' : '' }}</h3>
+        <h3 v-else-if="r.skipped">Pergunta pulada</h3>
         <h3 v-else>Ninguém acertou</h3>
+        <p v-if="r.skipped">Todos aceitaram pular. Ninguém pontuou.</p>
         <p>Resposta: <b>{{ r.answer }}</b></p>
         <p v-if="bonusLabel">{{ bonusLabel }}</p>
         <p v-else-if="hit && !hit.bonusAllowed && room.state?.config.bonusEnabled">

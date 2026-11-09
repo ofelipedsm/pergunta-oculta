@@ -11,6 +11,7 @@ import type { ZodType } from 'zod';
 import {
   bonusSchema,
   chatSchema,
+  skipVoteSchema,
   createRoomSchema,
   guessSchema,
   joinRoomSchema,
@@ -168,6 +169,20 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayDisconnect {
     const input = parse(chatSchema, body);
     if (!input.ok) return input.ack;
     return this.rooms.act(socket, (room, actor) => this.rooms.engine.chat(room, actor, input.data.text));
+  }
+
+  @SubscribeMessage('skip:start')
+  skipStart(@ConnectedSocket() socket: GameSocket) {
+    if (this.rooms.isRateLimited(socket)) return limited;
+    return this.rooms.act(socket, (room, actor) => this.rooms.engine.startSkipVote(room, actor));
+  }
+
+  @SubscribeMessage('skip:vote')
+  skipVote(@ConnectedSocket() socket: GameSocket, @MessageBody() body: unknown) {
+    if (this.rooms.isRateLimited(socket)) return limited;
+    const input = parse(skipVoteSchema, body);
+    if (!input.ok) return input.ack;
+    return this.rooms.act(socket, (room, actor) => this.rooms.engine.voteSkip(room, actor, input.data.accept));
   }
 
   @SubscribeMessage('turn:skip')

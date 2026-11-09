@@ -66,6 +66,14 @@ export interface Round {
   deadline?: number;
   pending?: Pending;
   hit?: Hit;
+  /** Votação para pular, aberta só com todas as palavras à mostra. */
+  skipVote?: { startedBy: string; voters: string[]; votes: Record<string, boolean> };
+  /** Terminou porque todos aceitaram pular. */
+  skipped?: boolean;
+  /** Vezes que alguém errou com todas as palavras abertas. */
+  allOpenTurns: number;
+  /** Uma nova votação só pode começar quando allOpenTurns chegar aqui (uma volta completa). */
+  nextSkipVoteAt: number;
   /** Modo Banco: último erro, que o dono ainda pode validar. */
   lastMiss?: { playerId: string; text: string; points: number };
   log: { at: number; text: string }[];

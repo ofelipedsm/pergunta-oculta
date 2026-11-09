@@ -244,8 +244,9 @@ export class RoomsService implements OnModuleDestroy {
   broadcast(room: Room): void {
     if (!this.server) return;
     const judgeId = room.round?.phase === 'judging' ? this.engine.judgeId(room) : undefined;
+    const skipAvailable = this.engine.skipVoteAvailable(room);
     for (const s of this.socketsIn(room.code)) {
-      if (s.data.playerId) s.emit('room:state', toPublicState(room, s.data.playerId, judgeId));
+      if (s.data.playerId) s.emit('room:state', toPublicState(room, s.data.playerId, judgeId, skipAvailable));
     }
   }
 

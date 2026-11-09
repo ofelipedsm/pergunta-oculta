@@ -6,7 +6,12 @@ import type { Room } from './model';
  * Regra de ouro: quem adivinha nunca recebe a pergunta completa nem as respostas
  * enquanto a rodada está em jogo.
  */
-export function toPublicState(room: Room, viewerId: string, judgeId?: string): PublicRoomState {
+export function toPublicState(
+  room: Room,
+  viewerId: string,
+  judgeId?: string,
+  skipVoteAvailable = false,
+): PublicRoomState {
   const r = room.round;
   const isMaster = !!r && r.masterId === viewerId;
 
@@ -30,6 +35,11 @@ export function toPublicState(room: Room, viewerId: string, judgeId?: string): P
       pending: r.pending ? { kind: r.pending.kind, playerId: r.pending.playerId, text: r.pending.text } : undefined,
       hit: r.hit ? { ...r.hit } : undefined,
       lastMiss: r.lastMiss ? { ...r.lastMiss } : undefined,
+      skipVoteAvailable,
+      skipped: r.skipped || undefined,
+      skipVote: r.skipVote
+        ? { startedBy: r.skipVote.startedBy, voters: [...r.skipVote.voters], votes: { ...r.skipVote.votes } }
+        : undefined,
       answer: answerKnown || isMaster ? r.answers[0] : undefined,
       question: ended || isMaster ? r.question : undefined,
       answers: isMaster ? [...r.answers] : undefined,

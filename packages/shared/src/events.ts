@@ -53,6 +53,8 @@ export interface ClientToServerEvents {
   'round:next': (ack: AckFn) => void;
   'turn:skip': (ack: AckFn) => void;
   'chat:send': (input: { text: string }, ack: AckFn) => void;
+  'skip:start': (ack: AckFn) => void;
+  'skip:vote': (input: { accept: boolean }, ack: AckFn) => void;
 }
 
 export type ToastKind = 'hit' | 'miss' | 'info';

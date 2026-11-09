@@ -105,6 +105,15 @@ export interface PublicPending {
   text: string;
 }
 
+/** Votação para pular a pergunta quando todas as palavras já estão abertas. */
+export interface PublicSkipVote {
+  startedBy: string;
+  /** Quem vota: os jogadores que estão adivinhando (o mestre não vota). */
+  voters: string[];
+  /** true = aceitou pular, false = recusou. Quem ainda não votou não aparece. */
+  votes: Record<string, boolean>;
+}
+
 export interface PublicRound {
   number: number;
   source: RoundSource;
@@ -123,6 +132,11 @@ export interface PublicRound {
   deadline?: number;
   pending?: PublicPending;
   hit?: PublicHit;
+  /** Todas as palavras abertas: qualquer um que adivinha pode propor pular agora. */
+  skipVoteAvailable: boolean;
+  skipVote?: PublicSkipVote;
+  /** A rodada terminou porque todos aceitaram pular. */
+  skipped?: boolean;
   /** No modo Banco: último chute errado, que o dono ainda pode validar. */
   lastMiss?: { playerId: string; text: string; points: number };
   /** Resposta principal: só depois do acerto ou no fim da rodada. */
