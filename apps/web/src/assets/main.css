@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=DM+Sans:wght@400;500;700&display=swap');
+
+/* Mesma identidade visual do jogo em HTML. */
+:root {
+  --bg: #1b1f3a;
+  --bg2: #262b52;
+  --bg3: #30366a;
+  --card: #f6efe2;
+  --ink: #1b1f3a;
+  --muted: #9aa0c8;
+  --gold: #f2b94b;
+  --ok: #7bd88f;
+  --bad: #ff8a7a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: #fff;
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 50% -200px, #33397a 0%, var(--bg) 60%);
+}
+
+.wrap {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 18px 16px 48px;
+}
+
+h1 {
+  font-family: Fraunces, serif;
+  font-weight: 800;
+  font-size: 30px;
+  margin: 4px 0 12px;
+}
+
+h1 span {
+  color: var(--gold);
+}
+
+h2 {
+  font-family: Fraunces, serif;
+  font-size: 19px;
+  margin: 0 0 10px;
+}
+
+.panel {
+  background: var(--bg2);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.sub {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}

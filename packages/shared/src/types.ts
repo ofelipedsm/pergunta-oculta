@@ -1,0 +1,144 @@
+/** Tipos de domínio compartilhados. Nada aqui pode conter segredo da rodada. */
+
+export type Level = 1 | 2 | 3;
+export type GameMode = 'bank' | 'master' | 'mixed';
+export type RoomPhase = 'lobby' | 'playing' | 'ended';
+export type RoundPhase = 'writing' | 'choosing' | 'guessing' | 'judging' | 'bonus' | 'revealed';
+export type RoundSource = 'bank' | 'master';
+export type EndBy = 'score' | 'rounds';
+
+export const CATEGORIES = [
+  'Geografia',
+  'História',
+  'Ciência',
+  'Animais',
+  'Esportes',
+  'Música',
+  'Cinema e TV',
+  'Comida e Bebida',
+  'Tecnologia',
+  'Corpo Humano',
+  'Brasil',
+  'Natureza',
+  'Profissões',
+  'Marcas e Produtos',
+  'Infância',
+] as const;
+export type Category = (typeof CATEGORIES)[number];
+
+export const LEVEL_LABEL: Record<Level, string> = { 1: 'Fácil', 2: 'Médio', 3: 'Difícil' };
+
+/** Pergunta do banco. Só o servidor importa o banco completo. */
+export interface Question {
+  id: string;
+  category: Category;
+  level: Level;
+  question: string;
+  answers: string[];
+}
+
+export interface RoomConfig {
+  mode: GameMode;
+  categories: Category[];
+  levels: Level[];
+  bonusEnabled: boolean;
+  /** Ponto extra só vale se, no acerto, faltarem pelo menos N palavras escondidas. */
+  bonusMinHidden: number;
+  turnTimeoutSec: number;
+  writeTimeoutSec: number;
+  judgeTimeoutSec: number;
+  endBy: EndBy;
+  /** Meta de pontos (endBy = score) ou número de rodadas (endBy = rounds). */
+  target: number;
+}
+
+export const LIMITS = {
+  maxPlayers: 8,
+  minPlayers: 2,
+  nameMax: 18,
+  guessMax: 80,
+  questionMinWords: 5,
+  questionMaxWords: 30,
+  questionMaxChars: 240,
+  answersMax: 5,
+  answerMax: 60,
+  roomCodeLength: 4,
+} as const;
+
+export const DEFAULT_CONFIG: RoomConfig = {
+  mode: 'bank',
+  categories: [...CATEGORIES],
+  levels: [1, 2],
+  bonusEnabled: true,
+  bonusMinHidden: 3,
+  turnTimeoutSec: 60,
+  writeTimeoutSec: 180,
+  judgeTimeoutSec: 20,
+  endBy: 'score',
+  target: 50,
+};
+
+export interface PublicPlayer {
+  id: string;
+  name: string;
+  color: string;
+  score: number;
+  connected: boolean;
+  left: boolean;
+}
+
+export interface PublicHit {
+  playerId: string;
+  points: number;
+  hiddenAtHit: number;
+  bonusAllowed: boolean;
+  /** Resultado do ponto extra, quando houve tentativa. */
+  bonus?: 'ok' | 'fail' | 'skipped';
+  masterPoints?: number;
+}
+
+export interface PublicPending {
+  kind: 'answer' | 'bonus';
+  playerId: string;
+  text: string;
+}
+
+export interface PublicRound {
+  number: number;
+  source: RoundSource;
+  masterId?: string;
+  category?: string;
+  level?: Level;
+  phase: RoundPhase;
+  wordCount: number;
+  /** Palavra aberta ou null quando escondida. */
+  words: (string | null)[];
+  turnPlayerId?: string;
+  lastOpened?: number;
+  /** Epoch ms do prazo da fase atual, só para desenhar o cronômetro. */
+  deadline?: number;
+  pending?: PublicPending;
+  hit?: PublicHit;
+  /** No modo Banco: último chute errado, que o dono ainda pode validar. */
+  lastMiss?: { playerId: string; text: string; points: number };
+  /** Resposta principal: só depois do acerto ou no fim da rodada. */
+  answer?: string;
+  /** Pergunta completa: só no fim da rodada, ou sempre para o mestre. */
+  question?: string;
+  /** Respostas aceitas: só para o mestre. */
+  answers?: string[];
+  log: { at: number; text: string }[];
+}
+
+export interface PublicRoomState {
+  code: string;
+  me: { id: string; isHost: boolean; isMaster: boolean };
+  hostId: string;
+  phase: RoomPhase;
+  config: RoomConfig;
+  players: PublicPlayer[];
+  round?: PublicRound;
+  winnerIds?: string[];
+  /** Quem decide o chute pendente agora (mestre, ou o dono se o mestre estiver fora). */
+  judgeId?: string;
+}

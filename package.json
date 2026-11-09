@@ -1,0 +1,26 @@
+{
+  "name": "pergunta-oculta",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build:packages": "pnpm --filter @po/shared --filter @po/question-bank build",
+    "dev": "pnpm build:packages && pnpm -r --parallel --filter ./apps/* --filter ./packages/* dev",
+    "build": "pnpm -r build",
+    "test": "pnpm build:packages && pnpm -r test",
+    "typecheck": "pnpm build:packages && pnpm -r typecheck",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "~5.6.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@nestjs/core"
+    ]
+  }
+}
