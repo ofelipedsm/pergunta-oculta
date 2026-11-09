@@ -88,6 +88,8 @@ export interface Room {
   players: Player[];
   deck: string[];
   deckPos: number;
+  /** Perguntas do banco que já saíram nesta sala, inclusive em partidas anteriores. */
+  usedQuestionIds: string[];
   turnIndex: number;
   masterIndex: number;
   roundCount: number;

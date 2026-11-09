@@ -6,12 +6,14 @@ import type { Room } from './model';
  * Regra de ouro: quem adivinha nunca recebe a pergunta completa nem as respostas
  * enquanto a rodada está em jogo.
  */
-export function toPublicState(
-  room: Room,
-  viewerId: string,
-  judgeId?: string,
-  skipVoteAvailable = false,
-): PublicRoomState {
+export interface PublicExtras {
+  judgeId?: string;
+  skipVoteAvailable?: boolean;
+  questionPool?: { total: number; unused: number };
+}
+
+export function toPublicState(room: Room, viewerId: string, extras: PublicExtras = {}): PublicRoomState {
+  const { judgeId, skipVoteAvailable = false, questionPool } = extras;
   const r = room.round;
   const isMaster = !!r && r.masterId === viewerId;
 
@@ -66,5 +68,6 @@ export function toPublicState(
     winnerIds: room.winnerIds ? [...room.winnerIds] : undefined,
     chat: room.chat.map((m) => ({ ...m })),
     judgeId,
+    questionPool,
   };
 }

@@ -596,6 +596,46 @@ describe('chat', () => {
   });
 });
 
+describe('sem repetir perguntas na mesma sala', () => {
+  /** Joga e encerra uma partida de uma rodada só, devolvendo a pergunta que saiu. */
+  function playOne(engine: GameEngine, room: Room, hostId: string): string {
+    ok(engine.start(room, hostId));
+    const id = round(room).questionId!;
+    ok(engine.endGame(room, hostId));
+    ok(engine.restart(room, hostId));
+    return id;
+  }
+
+  it('Jogar de novo não repete o que já saiu; quando acaba, recomeça e avisa', () => {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine, ['Ana', 'Bia']);
+    expect(engine.unusedCount(room)).toEqual({ total: 2, unused: 2 });
+
+    const first = playOne(engine, room, ids[0]!);
+    expect(engine.unusedCount(room)).toEqual({ total: 2, unused: 1 });
+    const second = playOne(engine, room, ids[0]!);
+    expect(second).not.toBe(first);
+    expect(engine.unusedCount(room)).toEqual({ total: 2, unused: 0 });
+
+    playOne(engine, room, ids[0]!);
+    expect(room.chat.some((m) => m.text.includes('O baralho recomeça'))).toBe(true);
+    expect(engine.unusedCount(room).unused).toBe(1);
+  });
+
+  it('na mesma partida, cada rodada traz uma pergunta diferente', () => {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine, ['Ana', 'Bia']);
+    ok(engine.updateConfig(room, ids[0]!, { bonusEnabled: false, endBy: 'rounds', target: 10 }));
+    ok(engine.start(room, ids[0]!));
+    const seen = [round(room).questionId];
+    ok(engine.openWord(room, round(room).turnPlayerId!, 0));
+    ok(engine.guess(room, round(room).turnPlayerId!, round(room).answers[0]!));
+    ok(engine.nextRound(room, ids[0]!));
+    seen.push(round(room).questionId);
+    expect(new Set(seen).size).toBe(2);
+  });
+});
+
 describe('jogar de novo', () => {
   it('volta ao lobby com pontos zerados, sem quem saiu', () => {
     const { engine } = setup();

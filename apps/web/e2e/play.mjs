@@ -214,6 +214,10 @@ try {
     await ana.page.waitForSelector('[data-test=mode-bank].on', { timeout: 2000 }).catch(() => {})
   }
   await ana.page.waitForSelector('[data-test=mode-bank].on')
+  const pool = (await ana.page.textContent('[data-test=question-pool]')).replace(/\s+/g, ' ')
+  const [total, unused] = pool.match(/\d+/g).map(Number)
+  if (!(unused < total)) throw new Error(`Contagem de perguntas inesperada: ${pool}`)
+  step(`Lobby mostra o que já saiu nesta sala: ${pool.trim()}`)
   await ana.page.click('[data-test=start]')
   for (const p of all) await waitPhase(p, 'choosing')
   /** Quem está com o campo de chute na tela. */

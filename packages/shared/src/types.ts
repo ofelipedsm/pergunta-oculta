@@ -178,6 +178,8 @@ export interface PublicRoomState {
   players: PublicPlayer[];
   round?: PublicRound;
   winnerIds?: string[];
+  /** Perguntas do banco na seleção atual e quantas ainda não saíram nesta sala. */
+  questionPool?: { total: number; unused: number };
   /** Histórico do chat da sala (mais antigas primeiro). */
   chat: ChatMessage[];
   /** Quem decide o chute pendente agora (mestre, ou o dono se o mestre estiver fora). */

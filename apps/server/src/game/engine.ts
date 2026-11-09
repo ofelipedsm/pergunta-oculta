@@ -50,6 +50,7 @@ export class GameEngine {
       players: [player],
       deck: [],
       deckPos: 0,
+      usedQuestionIds: [],
       turnIndex: 0,
       masterIndex: 0,
       roundCount: 0,
@@ -170,8 +171,7 @@ export class GameEngine {
     if (room.config.mode !== 'master' && pool.length === 0) {
       return fail('NO_QUESTIONS', 'Nenhuma pergunta com essas categorias e níveis');
     }
-    room.deck = this.shuffle((pool.length ? pool : this.deps.questions).map((q) => q.id));
-    room.deckPos = 0;
+    this.buildDeck(room);
     room.turnIndex = 0;
     room.masterIndex = 0;
     room.roundCount = 0;
@@ -780,13 +780,39 @@ export class GameEngine {
     return [];
   }
 
-  private drawQuestion(room: Room): Question {
-    if (room.deckPos >= room.deck.length) {
-      const pool = this.filteredPool(room.config);
-      room.deck = this.shuffle((pool.length ? pool : this.deps.questions).map((q) => q.id));
-      room.deckPos = 0;
+  /**
+   * Monta o baralho com as perguntas do filtro que ainda não saíram nesta sala.
+   * Se todas já saíram, libera de novo as desse filtro e avisa no chat.
+   */
+  private buildDeck(room: Room): void {
+    const pool = this.filteredPool(room.config);
+    const source = pool.length ? pool : this.deps.questions;
+    const used = new Set(room.usedQuestionIds);
+    let fresh = source.filter((q) => !used.has(q.id));
+    if (!fresh.length) {
+      const ids = new Set(source.map((q) => q.id));
+      room.usedQuestionIds = room.usedQuestionIds.filter((id) => !ids.has(id));
+      fresh = [...source];
+      this.log(room, 'Todas as perguntas desta seleção já saíram nesta sala. O baralho recomeça');
     }
-    const id = room.deck[room.deckPos++];
+    room.deck = this.shuffle(fresh.map((q) => q.id));
+    room.deckPos = 0;
+  }
+
+  /** Quantas perguntas da seleção atual ainda não saíram nesta sala. */
+  unusedCount(room: Room): { total: number; unused: number } {
+    const pool = this.filteredPool(room.config);
+    const used = new Set(room.usedQuestionIds);
+    return { total: pool.length, unused: pool.filter((q) => !used.has(q.id)).length };
+  }
+
+  private drawQuestion(room: Room): Question {
+    // Pula as que já saíram (pode acontecer se o filtro mudou entre partidas).
+    const used = new Set(room.usedQuestionIds);
+    while (room.deckPos < room.deck.length && used.has(room.deck[room.deckPos]!)) room.deckPos++;
+    if (room.deckPos >= room.deck.length) this.buildDeck(room);
+    const id = room.deck[room.deckPos++]!;
+    room.usedQuestionIds.push(id);
     return this.deps.questions.find((q) => q.id === id) ?? this.deps.questions[0]!;
   }
 

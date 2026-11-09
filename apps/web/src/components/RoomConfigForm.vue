@@ -93,6 +93,11 @@ function step(key: 'bonusMinHidden' | 'target', delta: number, min: number, max:
       </div>
     </div>
 
+    <p v-if="usesBank && room.state?.questionPool" class="pool" data-test="question-pool">
+      {{ room.state.questionPool.total }} perguntas nesta seleção ·
+      <b>{{ room.state.questionPool.unused }}</b> ainda não saíram nesta sala
+    </p>
+
     <div class="block">
       <label class="switch">
         <input
@@ -180,6 +185,14 @@ function step(key: 'bonusMinHidden' | 'target', delta: number, min: number, max:
 </template>
 
 <style scoped>
+.pool {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.pool b {
+  color: var(--gold);
+}
 .block + .block {
   margin-top: 16px;
 }

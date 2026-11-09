@@ -94,4 +94,5 @@ Front na Vercel, servidor no Render (grátis) ou no Fly.io. Passo a passo comple
 - Ponto extra (+1) por escrever a pergunta exata, se faltavam pelo menos N palavras no acerto.
 - Modo Mestre: todo chute não reconhecido vai para o mestre aceitar ou recusar. O mestre ganha metade das palavras abertas quando alguém acerta. Se o mestre cai, o dono da sala julga.
 - Modo Banco: o dono pode validar o último erro de outro jogador antes de uma nova palavra ser aberta.
+- Sem repetição na mesma sala: a sala guarda as perguntas do banco que já saíram, inclusive em partidas anteriores ("Jogar de novo"). Só quando todas da seleção tiverem saído o baralho recomeça, com aviso no chat. O lobby mostra quantas ainda não saíram.
 - Prazos: vez estourada conta como erro; mestre que não envia a pergunta cede a rodada para uma pergunta do banco; julgamento sem resposta conta como recusado.
