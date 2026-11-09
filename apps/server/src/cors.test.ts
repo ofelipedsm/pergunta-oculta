@@ -11,6 +11,8 @@ describe('CORS_ORIGIN', () => {
     process.env.CORS_ORIGIN = '  ';
     expect(corsOrigin()).toBe(true);
     expect(isOriginAllowed('https://qualquer.site')).toBe(true);
+    process.env.CORS_ORIGIN = '*';
+    expect(corsOrigin()).toBe(true);
   });
 
   it('aceita lista separada por vírgula e ignora barra no final', () => {

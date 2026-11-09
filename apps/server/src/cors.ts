@@ -1,13 +1,13 @@
 /**
  * Origens liberadas para o front. CORS_ORIGIN aceita uma lista separada por vírgula.
- * Vazia ou ausente: libera qualquer origem (útil no desenvolvimento e antes de ter o endereço da Vercel).
+ * Vazia, ausente ou "*": libera qualquer origem (útil no desenvolvimento e antes de ter o endereço da Vercel).
  */
 export function corsOrigin(): string[] | true {
   const list = (process.env.CORS_ORIGIN ?? '')
     .split(',')
     .map((o) => o.trim().replace(/\/+$/, ''))
     .filter(Boolean);
-  return list.length ? list : true;
+  return list.length && !list.includes('*') ? list : true;
 }
 
 /**
