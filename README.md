@@ -1,6 +1,6 @@
 # Pergunta Oculta
 
-Jogo de festa online: a pergunta aparece em quadrados numerados, cada jogador abre uma palavra na sua vez e é obrigado a chutar a resposta. A resposta é fácil; o difícil é entender a pergunta com poucas palavras abertas. Quem acerta ganha 1 ponto por palavra ainda escondida.
+Jogo de festa online: a pergunta aparece em quadrados numerados, cada jogador abre uma palavra na sua vez e é obrigado a chutar a resposta. A resposta é fácil; o difícil é entender a pergunta com poucas palavras abertas. Quem acerta ganha 1 ponto por palavra ainda escondida, mais 1 (com tudo aberto, ainda vale 1).
 
 Modos: **Banco** (perguntas sorteadas), **Mestre da Pergunta** (um jogador por rodada cria a pergunta e julga os chutes) e **Misto** (alterna os dois).
 
@@ -82,15 +82,17 @@ Front na Vercel, servidor no Render (grátis) ou no Fly.io. Passo a passo comple
 - Menos de 2 jogadores conectados: a partida pausa e o cronômetro congela. Quando alguém volta, retoma com o tempo que restava (no mínimo 15 s).
 - A vez pula quem está desconectado. Mestre que cai enquanto escreve tem 30 s para voltar; depois a rodada usa uma pergunta do banco.
 - Sala sem ninguém conectado por 30 min é removida.
-- `skip:start` e `skip:vote` (`{ accept }`): votação para pular, só com todas as palavras abertas. O mestre não vota.
+- `skip:start` e `skip:vote` (`{ accept }`): votação para pular, a qualquer momento da vez de alguém. O mestre e quem entrou no meio não votam.
 - `chat:send` (qualquer jogador, em qualquer fase): mensagem de até 200 caracteres. O servidor guarda as últimas 120 mensagens da sala e manda junto no `room:state`. As mensagens automáticas nunca revelam a pergunta ou a resposta antes da hora; isso tem teste.
 - `game:restart` (dono, depois do fim de jogo) volta ao lobby com os mesmos jogadores e pontos zerados.
 
 ## Regras que o núcleo já aplica
 
 - Só o jogador da vez abre palavra, e precisa chutar logo depois. Errou, a vez passa.
-- Acerto vale as palavras escondidas. Com todas as palavras abertas, a rodada vira uma roda de chutes (acertar não dá pontos, mas encerra a rodada).
-- Com tudo aberto, qualquer jogador que adivinha pode propor **pular a pergunta**. Se todos aceitarem, pula sem ninguém pontuar. Se alguém recusar (ou a vez passar sem todos aceitarem), os chutes seguem e uma nova votação só abre depois de uma volta completa.
+- Acerto vale as palavras escondidas + 1: com uma palavra aberta vale o tamanho da pergunta, com todas abertas vale 1. Com tudo aberto, a rodada vira uma roda de chutes.
+- A qualquer momento da rodada, qualquer jogador que adivinha pode propor **pular a pergunta**. Se todos aceitarem, pula sem ninguém pontuar. Se alguém recusar (ou a vez passar sem todos aceitarem), os chutes seguem e uma nova votação só abre depois de uma volta completa.
+- **Entrada no meio da partida** (o dono pode desligar em "Deixar entrar com a partida em andamento"): quem chega começa com 0, assiste a rodada atual e entra no fim da fila a partir da próxima. Se a partida estiver pausada por falta de gente, já entra na rodada.
+- **Chat sempre aberto**: no celular fica embaixo, ocupando o resto da tela, com botão de expandir; ao tocar no campo, o chat cresce acima do teclado e volta ao compacto quando o teclado fecha. O campo de chute é o destaque da tela; o do chat é discreto.
 - Ponto extra (+1) por escrever a pergunta exata, se faltavam pelo menos N palavras no acerto.
 - Modo Mestre: todo chute não reconhecido vai para o mestre aceitar ou recusar. O mestre ganha metade das palavras abertas quando alguém acerta. Se o mestre cai, o dono da sala julga.
 - Modo Banco: o dono pode validar o último erro de outro jogador antes de uma nova palavra ser aberta.

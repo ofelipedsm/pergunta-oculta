@@ -10,6 +10,7 @@ import {
 } from '@po/shared';
 import type { ChatMessage } from '@po/shared';
 import type { ChatTone, EngineDeps, EngineResult, Player, Room, Round, Toast } from './model';
+import { pointsFor } from './scoring';
 
 const COLORS = ['#ff7a8a', '#5fd0c5', '#b59cff', '#ffb86b', '#7bd88f', '#6bb8ff', '#ff9ad5', '#e8e46b'];
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ'; // sem I, L e O
@@ -63,7 +64,11 @@ export class GameEngine {
     return { room, player };
   }
 
-  /** Entrada nova (só no lobby) ou reconexão com playerId + token (a qualquer momento). */
+  /**
+   * Reconexão com playerId + token (a qualquer momento) ou entrada nova.
+   * Com a partida em andamento, quem entra começa com 0 e só joga a partir da próxima rodada
+   * (se o dono permitir em lateJoin).
+   */
   join(
     room: Room,
     input: { name?: string; playerId?: string; token?: string },
@@ -78,20 +83,26 @@ export class GameEngine {
         return { ok: true, toasts, data: { player: p, reconnected: true } };
       }
     }
-    if (room.phase !== 'lobby') return fail('GAME_STARTED', 'A partida já começou');
+    if (room.phase !== 'lobby' && !room.config.lateJoin) {
+      return fail('GAME_STARTED', 'A partida já começou e o dono não liberou entrar no meio');
+    }
     if (this.active(room).length >= LIMITS.maxPlayers) return fail('ROOM_FULL', 'A sala está cheia');
     const name = input.name?.trim();
     if (!name) return fail('INVALID', 'Informe seu nome');
 
     const player = this.makePlayer(this.uniqueName(room, name), room.players.length);
     room.players.push(player);
-    this.log(room, `${player.name} entrou na sala`);
+    const toasts: Toast[] = [];
+    if (room.phase === 'playing') {
+      player.spectating = true;
+      this.log(room, `${player.name} entrou na partida e joga a partir da próxima rodada`);
+      // Se a partida estava pausada por falta de gente, quem chega já entra na roda.
+      toasts.push(...this.updatePresence(room, player.id, true));
+    } else {
+      this.log(room, `${player.name} entrou na sala`);
+    }
     this.touch(room);
-    return {
-      ok: true,
-      toasts: [{ kind: 'info', text: `${player.name} entrou na sala` }],
-      data: { player, reconnected: false },
-    };
+    return { ok: true, toasts, data: { player, reconnected: false } };
   }
 
   /** Marca a conexão e ajusta a partida: pausa, retomada e prazo do mestre que caiu. */
@@ -176,7 +187,10 @@ export class GameEngine {
     room.masterIndex = 0;
     room.roundCount = 0;
     room.winnerIds = undefined;
-    for (const p of room.players) p.score = 0;
+    for (const p of room.players) {
+      p.score = 0;
+      p.spectating = undefined;
+    }
     room.phase = 'playing';
     this.log(room, 'A partida começou!');
     const toasts = this.startRound(room);
@@ -289,7 +303,7 @@ export class GameEngine {
         return { ok: true, toasts: [], data: undefined };
       }
       this.log(room, `${this.name(room, actorId)} validou o chute “${miss.text}”`, 'hit');
-      return { ok: true, toasts: this.hit(room, miss.playerId, miss.points), data: undefined };
+      return { ok: true, toasts: this.hit(room, miss.playerId, miss.hidden), data: undefined };
     }
 
     return fail('WRONG_PHASE', 'Não há chute para julgar agora');
@@ -360,13 +374,13 @@ export class GameEngine {
     return { ok: true, toasts: [{ kind: 'info', text: 'Fim de jogo!' }], data: undefined };
   }
 
-  /** Com todas as palavras abertas, quem adivinha pode propor pular a pergunta. */
+  /** Quem adivinha pode propor pular a pergunta a qualquer momento da rodada (uma vez por volta). */
   startSkipVote(room: Room, actorId: string): EngineResult {
     const r = room.round;
     const check = this.requirePlaying(room, actorId);
     if (check) return check;
     if (!r || !this.skipVoteAvailable(room)) {
-      return fail('WRONG_PHASE', 'Só dá para propor pular com todas as palavras abertas, uma vez por volta');
+      return fail('WRONG_PHASE', 'Agora não dá para propor pular. Depois de uma recusa, só na próxima volta');
     }
     const voters = this.skipVoters(room);
     if (!voters.includes(actorId)) return fail('NOT_YOUR_TURN', 'Só quem está adivinhando vota');
@@ -392,7 +406,7 @@ export class GameEngine {
     return { ok: true, toasts: this.checkSkipVote(room), data: undefined };
   }
 
-  /** Votação disponível: tudo aberto, ninguém julgando, sem votação aberta e já passou uma volta desde a última. */
+  /** Votação disponível: alguém está na vez de abrir ou chutar, sem votação aberta e já passou uma volta desde a última recusa. */
   skipVoteAvailable(room: Room): boolean {
     const r = room.round;
     return (
@@ -400,17 +414,16 @@ export class GameEngine {
       !room.paused &&
       !!r &&
       r.words.length > 0 &&
-      this.hidden(r) === 0 &&
-      r.phase === 'guessing' &&
+      (r.phase === 'choosing' || r.phase === 'guessing') &&
       !r.skipVote &&
-      r.allOpenTurns >= r.nextSkipVoteAt
+      r.turnsPassed >= r.nextSkipVoteAt
     );
   }
 
-  /** Votam os jogadores ativos e conectados que estão adivinhando (o mestre fica de fora). */
+  /** Votam os jogadores conectados que estão adivinhando (o mestre e quem só assiste ficam de fora). */
   private skipVoters(room: Room): string[] {
     const masterId = room.round?.masterId;
-    return this.active(room)
+    return this.playing(room)
       .filter((p) => p.connected && p.id !== masterId)
       .map((p) => p.id);
   }
@@ -435,7 +448,7 @@ export class GameEngine {
   private failSkipVote(room: Room, reason: string): void {
     const r = room.round!;
     r.skipVote = undefined;
-    r.nextSkipVoteAt = r.allOpenTurns + Math.max(1, this.skipVoters(room).length);
+    r.nextSkipVoteAt = r.turnsPassed + Math.max(1, this.skipVoters(room).length);
     this.log(room, `Pular recusado (${reason}). Os chutes continuam; nova votação depois de uma volta`, 'miss');
   }
 
@@ -455,7 +468,10 @@ export class GameEngine {
     const check = this.requireHost(room, actorId) ?? this.requireRoomPhase(room, 'ended');
     if (check) return check;
     room.players = room.players.filter((p) => !p.left);
-    for (const p of room.players) p.score = 0;
+    for (const p of room.players) {
+      p.score = 0;
+      p.spectating = undefined;
+    }
     room.phase = 'lobby';
     room.round = undefined;
     room.winnerIds = undefined;
@@ -508,6 +524,7 @@ export class GameEngine {
 
   private startRound(room: Room): Toast[] {
     room.roundCount += 1;
+    this.promoteSpectators(room);
     const mode = room.config.mode;
     const source = mode === 'bank' ? 'bank' : mode === 'master' ? 'master' : room.roundCount % 2 === 1 ? 'bank' : 'master';
 
@@ -524,7 +541,7 @@ export class GameEngine {
           phase: 'writing',
           revealed: [],
           deadline: this.deadline(room.config.writeTimeoutSec),
-          allOpenTurns: 0,
+          turnsPassed: 0,
           nextSkipVoteAt: 0,
           log: [],
         };
@@ -540,7 +557,7 @@ export class GameEngine {
       ...this.bankRoundFields(q),
       phase: 'choosing',
       revealed: [],
-      allOpenTurns: 0,
+      turnsPassed: 0,
       nextSkipVoteAt: 0,
       log: [],
     };
@@ -583,7 +600,7 @@ export class GameEngine {
       for (let k = 0; k < n; k++) {
         const idx = (room.turnIndex + k) % n;
         const p = room.players[idx]!;
-        if (p.left || p.id === r.masterId || (onlyConnected && !p.connected)) continue;
+        if (p.left || p.spectating || p.id === r.masterId || (onlyConnected && !p.connected)) continue;
         room.turnIndex = (idx + 1) % n;
         r.turnPlayerId = p.id;
         this.log(room, `Vez de ${p.name}`);
@@ -602,7 +619,11 @@ export class GameEngine {
     const r = room.round;
     const now = this.deps.now();
     const toasts: Toast[] = [];
-    const online = this.active(room).filter((p) => p.connected).length;
+    let online = this.playing(room).filter((p) => p.connected).length;
+    // Faltou gente para jogar e há quem esteja só assistindo: entra na rodada atual mesmo.
+    if (online < LIMITS.minPlayers && this.promoteSpectators(room, true)) {
+      online = this.playing(room).filter((p) => p.connected).length;
+    }
 
     if (online < LIMITS.minPlayers && !room.paused) {
       room.paused = { remainingMs: r?.deadline ? Math.max(0, r.deadline - now) : undefined };
@@ -631,7 +652,7 @@ export class GameEngine {
     for (let k = 0; k < n; k++) {
       const idx = (room.masterIndex + k) % n;
       const p = room.players[idx]!;
-      if (!p.left) {
+      if (!p.left && !p.spectating) {
         room.masterIndex = (idx + 1) % n;
         return p;
       }
@@ -639,9 +660,11 @@ export class GameEngine {
     return undefined;
   }
 
-  private hit(room: Room, playerId: string, points: number): Toast[] {
+  /** Acerto com `hidden` palavras ainda escondidas: vale hidden + 1 pontos. */
+  private hit(room: Room, playerId: string, hidden: number): Toast[] {
     const r = room.round!;
     const p = room.players.find((x) => x.id === playerId)!;
+    const points = pointsFor(hidden);
     p.score += points;
 
     let masterPoints: number | undefined;
@@ -651,8 +674,8 @@ export class GameEngine {
       if (master) master.score += masterPoints;
     }
 
-    const bonusAllowed = room.config.bonusEnabled && points >= room.config.bonusMinHidden;
-    r.hit = { playerId, points, hiddenAtHit: points, bonusAllowed, masterPoints };
+    const bonusAllowed = room.config.bonusEnabled && hidden >= room.config.bonusMinHidden;
+    r.hit = { playerId, points, hiddenAtHit: hidden, bonusAllowed, masterPoints };
     r.pending = undefined;
     r.lastMiss = undefined;
     this.log(
@@ -686,14 +709,10 @@ export class GameEngine {
       { kind: 'miss', text: text === null ? `${name} perdeu a vez` : `${name} errou: ${text}` },
     ];
 
-    if (hidden === 0) {
-      // Tudo aberto: a rodada segue em voltas de chute até alguém acertar ou todos aceitarem pular.
-      r.allOpenTurns += 1;
-      if (r.skipVote) this.failSkipVote(room, 'a vez passou sem todos aceitarem');
-      r.lastMiss = undefined;
-    } else {
-      r.lastMiss = r.source === 'bank' && text !== null ? { playerId, text, points: hidden } : undefined;
-    }
+    r.turnsPassed += 1;
+    if (r.skipVote) this.failSkipVote(room, 'a vez passou sem todos aceitarem');
+    // Tudo aberto: a rodada segue em voltas de chute (valendo 1) até alguém acertar ou todos pularem.
+    r.lastMiss = hidden > 0 && r.source === 'bank' && text !== null ? { playerId, text, hidden } : undefined;
     this.toChoosing(room);
     this.touch(room);
     return toasts;
@@ -762,7 +781,8 @@ export class GameEngine {
   private handleAbsentPlayer(room: Room, playerId: string): Toast[] {
     const r = room.round;
     if (room.phase !== 'playing' || !r) return [];
-    if (this.active(room).length < LIMITS.minPlayers) {
+    if (this.playing(room).length < LIMITS.minPlayers) this.promoteSpectators(room, true);
+    if (this.playing(room).length < LIMITS.minPlayers) {
       this.finishGame(room);
       return [{ kind: 'info', text: 'Jogadores insuficientes. Fim de jogo' }];
     }
@@ -887,6 +907,21 @@ export class GameEngine {
 
   private active(room: Room): Player[] {
     return room.players.filter((p) => !p.left);
+  }
+
+  /** Jogadores na sala que já estão jogando (fora quem só assiste até a próxima rodada). */
+  private playing(room: Room): Player[] {
+    return room.players.filter((p) => !p.left && !p.spectating);
+  }
+
+  /** Quem entrou no meio passa a jogar. Devolve true se alguém foi promovido. */
+  private promoteSpectators(room: Room, midRound = false): boolean {
+    const waiting = room.players.filter((p) => p.spectating && !p.left);
+    for (const p of waiting) p.spectating = undefined;
+    if (waiting.length && midRound) {
+      this.log(room, `${waiting.map((p) => p.name).join(', ')} já entra${waiting.length > 1 ? 'm' : ''} nesta rodada`);
+    }
+    return waiting.length > 0;
   }
 
   private isActive(room: Room, id: string | undefined): boolean {

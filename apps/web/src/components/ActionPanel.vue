@@ -55,25 +55,27 @@ const bonusLabel = computed(() => {
           Sim, dar {{ r.lastMiss!.points }} pts
         </button>
       </div>
+      <SkipVote />
     </template>
 
     <!-- Chutar -->
     <template v-else-if="r.phase === 'guessing'">
       <template v-if="room.isMyTurn">
         <p v-if="allOpen" class="prompt">
-          <b>Sua vez de chutar.</b> Todas as palavras estão abertas: acertar não dá pontos, mas encerra a rodada.
+          <b>Sua vez de chutar.</b> Todas as palavras estão abertas: acertar ainda vale <b>1</b> ponto.
         </p>
-        <p v-else class="prompt">Qual é a resposta? Se acertar agora, ganha <b>{{ room.hiddenCount }}</b> pts.</p>
+        <p v-else class="prompt">Qual é a resposta? Se acertar agora, ganha <b>{{ room.worth }}</b> pts.</p>
         <TextAction
           placeholder="Digite a resposta…"
           button="Chutar"
+          primary
           :maxlength="LIMITS.guessMax"
           test-id="guess"
           @submit="room.guess"
         />
       </template>
       <p v-else class="prompt"><b>{{ turnName }}</b> está chutando…</p>
-      <SkipVote v-if="allOpen" />
+      <SkipVote />
     </template>
 
     <!-- Julgamento -->
@@ -109,6 +111,7 @@ const bonusLabel = computed(() => {
         <TextAction
           placeholder="Escreva a pergunta completa…"
           button="Tentar"
+          primary
           :maxlength="LIMITS.questionMaxChars"
           test-id="bonus"
           @submit="room.tryBonus"

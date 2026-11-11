@@ -19,11 +19,12 @@ const activeId = computed(() => {
       v-for="p in room.players.filter((x) => !x.left)"
       :key="p.id"
       class="player"
-      :class="{ turn: p.id === activeId, off: !p.connected }"
+      :class="{ turn: p.id === activeId, off: !p.connected, waiting: p.spectating }"
     >
       <div class="nm" :style="{ color: p.color }">
         {{ p.name }}<span v-if="p.id === room.round?.masterId" class="badge">mestre</span>
       </div>
+      <div v-if="p.spectating" class="next">entra na próxima</div>
       <div class="pts">{{ p.score }}</div>
     </div>
   </div>
@@ -46,6 +47,14 @@ const activeId = computed(() => {
 }
 .player.turn {
   border-color: var(--gold);
+}
+.player.waiting {
+  border-style: dashed;
+  border-color: var(--bg3);
+}
+.next {
+  font-size: 11px;
+  color: var(--muted);
 }
 .player.off {
   opacity: 0.5;

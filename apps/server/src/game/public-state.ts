@@ -1,5 +1,6 @@
 import type { PublicRoomState, PublicRound } from '@po/shared';
 import type { Room } from './model';
+import { pointsFor } from './scoring';
 
 /**
  * Único lugar que decide o que cada jogador vê.
@@ -36,7 +37,9 @@ export function toPublicState(room: Room, viewerId: string, extras: PublicExtras
       deadline: r.deadline,
       pending: r.pending ? { kind: r.pending.kind, playerId: r.pending.playerId, text: r.pending.text } : undefined,
       hit: r.hit ? { ...r.hit } : undefined,
-      lastMiss: r.lastMiss ? { ...r.lastMiss } : undefined,
+      lastMiss: r.lastMiss
+        ? { playerId: r.lastMiss.playerId, text: r.lastMiss.text, points: pointsFor(r.lastMiss.hidden) }
+        : undefined,
       skipVoteAvailable,
       skipped: r.skipped || undefined,
       skipVote: r.skipVote
@@ -63,6 +66,7 @@ export function toPublicState(room: Room, viewerId: string, extras: PublicExtras
       score: p.score,
       connected: p.connected,
       left: p.left,
+      spectating: p.spectating || undefined,
     })),
     round,
     winnerIds: room.winnerIds ? [...room.winnerIds] : undefined,

@@ -26,6 +26,8 @@ export interface Player {
   connected: boolean;
   /** Saiu durante a partida: mantém o placar, mas não joga mais. */
   left: boolean;
+  /** Entrou com a partida em andamento: assiste a rodada atual e joga a partir da próxima. */
+  spectating?: boolean;
   joinedAt: number;
 }
 
@@ -33,7 +35,7 @@ export interface Pending {
   kind: 'answer' | 'bonus';
   playerId: string;
   text: string;
-  /** Palavras escondidas no momento do chute (vale como pontos se o juiz aceitar). */
+  /** Palavras escondidas no momento do chute (vale hiddenAtGuess + 1 pontos se o juiz aceitar). */
   hiddenAtGuess: number;
 }
 
@@ -66,16 +68,16 @@ export interface Round {
   deadline?: number;
   pending?: Pending;
   hit?: Hit;
-  /** Votação para pular, aberta só com todas as palavras à mostra. */
+  /** Votação para pular a pergunta (todos que adivinham precisam aceitar). */
   skipVote?: { startedBy: string; voters: string[]; votes: Record<string, boolean> };
   /** Terminou porque todos aceitaram pular. */
   skipped?: boolean;
-  /** Vezes que alguém errou com todas as palavras abertas. */
-  allOpenTurns: number;
-  /** Uma nova votação só pode começar quando allOpenTurns chegar aqui (uma volta completa). */
+  /** Vezes que a vez passou nesta rodada (erro ou tempo esgotado). */
+  turnsPassed: number;
+  /** Uma nova votação só pode começar quando turnsPassed chegar aqui (uma volta completa). */
   nextSkipVoteAt: number;
   /** Modo Banco: último erro, que o dono ainda pode validar. */
-  lastMiss?: { playerId: string; text: string; points: number };
+  lastMiss?: { playerId: string; text: string; hidden: number };
   log: { at: number; text: string }[];
 }
 

@@ -31,6 +31,7 @@ export const roomConfigSchema = z
     judgeTimeoutSec: z.number().int().min(10).max(120),
     endBy: z.enum(['score', 'rounds']),
     target: z.number().int().min(1).max(500),
+    lateJoin: z.boolean(),
   })
   .partial();
 

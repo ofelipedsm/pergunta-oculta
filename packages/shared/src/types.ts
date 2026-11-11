@@ -57,6 +57,8 @@ export interface RoomConfig {
   endBy: EndBy;
   /** Meta de pontos (endBy = score) ou número de rodadas (endBy = rounds). */
   target: number;
+  /** Permite entrar com a partida em andamento (começa com 0 e joga a partir da próxima rodada). */
+  lateJoin: boolean;
 }
 
 export const LIMITS = {
@@ -85,6 +87,7 @@ export const DEFAULT_CONFIG: RoomConfig = {
   judgeTimeoutSec: 20,
   endBy: 'score',
   target: 50,
+  lateJoin: true,
 };
 
 export interface PublicPlayer {
@@ -94,6 +97,8 @@ export interface PublicPlayer {
   score: number;
   connected: boolean;
   left: boolean;
+  /** Entrou com a partida em andamento: só assiste até a próxima rodada. */
+  spectating?: boolean;
 }
 
 export interface PublicHit {
@@ -112,7 +117,7 @@ export interface PublicPending {
   text: string;
 }
 
-/** Votação para pular a pergunta quando todas as palavras já estão abertas. */
+/** Votação para pular a pergunta. Todos que adivinham precisam aceitar; ninguém pontua. */
 export interface PublicSkipVote {
   startedBy: string;
   /** Quem vota: os jogadores que estão adivinhando (o mestre não vota). */
@@ -139,7 +144,7 @@ export interface PublicRound {
   deadline?: number;
   pending?: PublicPending;
   hit?: PublicHit;
-  /** Todas as palavras abertas: qualquer um que adivinha pode propor pular agora. */
+  /** Qualquer um que adivinha pode propor pular agora (uma vez por volta de vezes). */
   skipVoteAvailable: boolean;
   skipVote?: PublicSkipVote;
   /** A rodada terminou porque todos aceitaram pular. */

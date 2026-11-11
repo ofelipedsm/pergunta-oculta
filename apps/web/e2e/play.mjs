@@ -94,17 +94,19 @@ try {
   if (SHOTS) await ana.page.locator('[data-test=qr] .qr-img').screenshot({ path: `${SHOTS}/qr.png` })
   step('Convite: link copiado, WhatsApp com o link e QR code na tela')
   // ---------------- chat no lobby
-  await bia.page.click('[data-test=chat-open]')
+  // O chat já fica aberto embaixo; tocar no campo expande, e ao sair do campo ele volta a ser compacto.
+  await bia.page.click('[data-test=chat-input]')
+  await bia.page.waitForSelector('[data-test=chat].sheet')
   await bia.page.fill('[data-test=chat-input]', 'Bora modo Mestre depois?')
   await bia.page.click('[data-test=chat-send]')
-  await ana.page.waitForSelector('[data-test=chat-unread]:has-text("1")')
-  await ana.page.click('[data-test=chat-open]')
-  await ana.page.waitForSelector('[data-test=chat-user]:has-text("Bora modo Mestre depois?")')
+  await bia.page.waitForSelector('[data-test=chat].sheet [data-test=chat-user]:has-text("Bora modo Mestre depois?")')
+  await shot(bia, '00a-chat-digitando')
+  await bia.page.locator('[data-test=chat-input]').blur()
+  await bia.page.waitForSelector('[data-test=chat].inline')
+  await ana.page.waitForSelector('[data-test=chat].inline [data-test=chat-user]:has-text("Bora modo Mestre depois?")')
   await ana.page.waitForSelector('[data-test=chat-system]:has-text("Caio entrou na sala")')
   await shot(ana, '00-chat-lobby')
-  await ana.page.click('[data-test=chat] .close')
-  await bia.page.click('[data-test=chat] .close')
-  step('Chat no lobby: Bia mandou mensagem e Ana viu o aviso de não lida')
+  step('Chat no lobby: aberto por padrão, expande ao digitar e volta ao compacto')
   await shot(ana, '01-lobby-dono')
   await shot(bia, '02-lobby-convidado')
 
@@ -129,12 +131,16 @@ try {
   // ponto extra só aparece se faltavam palavras suficientes
   await t.page.waitForSelector('[data-test=action][data-phase=bonus], [data-test=action][data-phase=revealed]')
   step(`Ana validou o chute de ${t.name}`)
-  await caio.page.click('[data-test=chat-open]')
-  await caio.page.waitForSelector(`[data-test=chat-system]:has-text("Ana validou o chute")`)
+  await caio.page.waitForSelector(`[data-test=chat].inline [data-test=chat-system]:has-text("Ana validou o chute")`)
   await caio.page.waitForSelector('[data-test=chat-system]:has-text("Vez de")')
   await shot(caio, '05b-chat-partida')
-  await caio.page.click('[data-test=chat] .close')
-  step('Chat narra a partida: vez de cada um, chutes e validação')
+  // Na partida, o chat ocupa o resto da tela sem rolagem da página
+  const layout = await caio.page.evaluate(() => ({
+    page: document.scrollingElement.scrollHeight - window.innerHeight,
+    chat: document.querySelector('[data-test=chat]').getBoundingClientRect().height,
+  }))
+  if (layout.page > 1 || layout.chat < 150) throw new Error(`Layout do chat inesperado: ${JSON.stringify(layout)}`)
+  step(`Chat narra a partida e ocupa o resto da tela (${Math.round(layout.chat)}px, sem rolagem)`)
 
   if ((await phase(t)) === 'bonus') {
     await t.page.click('[data-test=bonus-skip]')
@@ -196,8 +202,8 @@ try {
   for (const p of all) await waitPhase(p, 'revealed')
   const result = await t.page.textContent('[data-test=round-result]')
   await shot(t, '11-mestre-resultado')
-  if (!result.includes('+5 +1')) throw new Error(`Resultado inesperado: ${result}`)
-  step(`${t.name} acertou com 5 palavras escondidas e ganhou o ponto extra`)
+  if (!result.includes('+6 +1')) throw new Error(`Resultado inesperado: ${result}`)
+  step(`${t.name} acertou com 5 palavras escondidas (+6) e ganhou o ponto extra`)
 
   await ana.page.click('[data-test=next]')
   await bia.page.waitForSelector('[data-test=master-editor]')
@@ -220,6 +226,9 @@ try {
   step(`Lobby mostra o que já saiu nesta sala: ${pool.trim()}`)
   await ana.page.click('[data-test=start]')
   for (const p of all) await waitPhase(p, 'choosing')
+  // Logo no começo da rodada já dá para propor pular
+  await bia.page.waitForSelector('[data-test=skip-start]')
+  if ((await ana.page.textContent('[data-test=worth]')).trim() === '') throw new Error('Valor do acerto vazio')
   /** Quem está com o campo de chute na tela. */
   async function guesser(ms = 5000) {
     const start = Date.now()
@@ -243,8 +252,7 @@ try {
   await shot(ana, '12-tudo-aberto')
   await ana.page.click('[data-test=skip-start]')
   await bia.page.click('[data-test=skip-reject]')
-  await caio.page.waitForSelector('[data-test=chat-open]')
-  await ana.page.waitForSelector('text=Uma nova votação para pular só depois de uma volta')
+  await ana.page.waitForSelector('text=Pular foi recusado')
   step('Todas as palavras abertas: Ana propôs pular e Bia recusou; os chutes seguem')
   for (let k = 0; k < 3; k++) {
     const g = await guesser()
@@ -261,6 +269,20 @@ try {
   if (!skipped.includes('Pergunta pulada')) throw new Error(`Resultado inesperado: ${skipped}`)
   await shot(caio, '13-pulada')
   step('Depois de uma volta, Bia propôs de novo, todos aceitaram e a pergunta foi pulada sem pontos')
+
+  // ---------------- entrada no meio da partida
+  const davi = await player('Davi')
+  await davi.page.goto(link)
+  await davi.page.fill('[data-test=room-name]', 'Davi')
+  await davi.page.click('[data-test=room-join]')
+  await davi.page.waitForSelector('[data-test=spectating]')
+  await ana.page.waitForSelector('.player.waiting:has-text("Davi")')
+  await ana.page.waitForSelector('[data-test=chat-system]:has-text("Davi entrou na partida")')
+  await shot(davi, '14-entrou-no-meio')
+  await ana.page.click('[data-test=next]')
+  await davi.page.waitForSelector('[data-test=spectating]', { state: 'detached' })
+  await ana.page.waitForSelector('.player:has-text("Davi"):not(.waiting)')
+  step('Davi entrou no meio: assistiu a rodada com 0 pontos e passou a jogar na seguinte')
 
   if (errors.length) throw new Error(`Erros no console:\n${errors.join('\n')}`)
   console.log('\nTudo certo.')

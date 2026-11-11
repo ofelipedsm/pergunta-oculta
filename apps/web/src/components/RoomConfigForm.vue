@@ -120,6 +120,20 @@ function step(key: 'bonusMinHidden' | 'target', delta: number, min: number, max:
     </div>
 
     <div class="block">
+      <label class="switch">
+        <input
+          type="checkbox"
+          :checked="cfg.lateJoin"
+          :disabled="!editable"
+          data-test="late-join"
+          @change="set({ lateJoin: ($event.target as HTMLInputElement).checked })"
+        />
+        Deixar entrar com a partida em andamento
+      </label>
+      <p v-if="cfg.lateJoin" class="hint">Quem chega começa com 0 pontos e joga a partir da rodada seguinte.</p>
+    </div>
+
+    <div class="block">
       <span class="label">Fim da partida</span>
       <div class="chips">
         <button

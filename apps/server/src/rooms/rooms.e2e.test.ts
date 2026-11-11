@@ -141,7 +141,7 @@ describe('servidor em tempo real', () => {
     await call(bia, 'round:guess', { text: room.round!.answers[0] });
     const s2 = await until(ana, (s) => s.round?.phase === 'revealed');
     const words = room.round!.words.length;
-    expect(s2.players.find((p) => p.id === sBia.playerId)?.score).toBe(words - 2);
+    expect(s2.players.find((p) => p.id === sBia.playerId)?.score).toBe(words - 1); // 2 abertas: escondidas + 1
     expect(s2.round?.question).toBe(room.round!.question);
   });
 
@@ -170,7 +170,7 @@ describe('servidor em tempo real', () => {
     expect(await tryCall(caio, 'judge:decide', { accept: true })).toMatchObject({ ok: false, code: 'NOT_JUDGE' });
     await call(ana, 'judge:decide', { accept: true });
     const done = await until(caio, (s) => s.round?.phase === 'revealed');
-    expect(done.players.find((p) => p.id === sBia.playerId)?.score).toBe(6);
+    expect(done.players.find((p) => p.id === sBia.playerId)?.score).toBe(7); // 1 aberta de 7: 6 escondidas + 1
     expect(done.players.find((p) => p.id === sCaio.playerId)?.score).toBe(0);
   });
 
@@ -184,12 +184,27 @@ describe('servidor em tempo real', () => {
     const bia2 = await connect();
     expect(await tryCall(bia2, 'room:join', { code: sAna.code, playerId: sBia.playerId, token: 'errado' })).toMatchObject({
       ok: false,
-      code: 'GAME_STARTED',
+      code: 'INVALID', // token errado não reconecta; sem nome, também não entra como novo
     });
     await call(bia2, 'room:join', { code: sAna.code, playerId: sBia.playerId, token: sBia.token });
     const s = await until(bia2, (st) => st.phase === 'playing');
     expect(s.me.id).toBe(sBia.playerId);
     await until(ana, (st) => st.players.find((p) => p.id === sBia.playerId)?.connected === true);
+  });
+
+  it('entra no meio da partida: assiste a rodada e joga a partir da próxima', async () => {
+    const { ana, bia, sAna } = await threePlayers();
+    await call(ana, 'room:config', { bonusEnabled: false });
+    await call(ana, 'game:start');
+    await until(bia, (s) => s.phase === 'playing');
+
+    const davi = await connect();
+    const sDavi = await call<Session>(davi, 'room:join', { code: sAna.code, name: 'Davi' });
+    const view = await until(davi, (s) => s.phase === 'playing');
+    const me = view.players.find((p) => p.id === sDavi.playerId);
+    expect(me).toMatchObject({ score: 0, spectating: true });
+    expect(view.round?.words.every((w) => w === null)).toBe(true);
+    await until(ana, (s) => s.chat.some((m) => m.text.includes('Davi entrou na partida')));
   });
 
   it('dono fora do ar perde a posse depois do prazo', async () => {

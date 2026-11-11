@@ -6,7 +6,10 @@ import { useRoomStore } from '@/stores/room'
 
 const room = useRoomStore()
 const route = useRoute()
-/** Na sala, o computador mostra o chat fixo à direita: o conteúdo abre espaço para ele. */
+/**
+ * Na sala, o chat fica sempre à mostra: no celular ocupa o resto da altura da tela (embaixo);
+ * no computador fica fixo à direita e o conteúdo abre espaço para ele.
+ */
 const withChat = computed(() => route.name === 'room' && !!room.state)
 </script>
 
@@ -23,11 +26,17 @@ const withChat = computed(() => route.name === 'room' && !!room.state)
 
 <style scoped>
 .with-chat {
-  padding-bottom: 96px; /* espaço para o botão do chat no celular */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: 12px;
 }
 @media (min-width: 1100px) {
   .with-chat {
+    display: block;
     margin-right: 340px;
+    padding-bottom: 48px;
   }
 }
 @media (min-width: 1500px) {

@@ -26,6 +26,10 @@ const goal = computed(() => {
     Partida pausada: aguardando os jogadores voltarem. O cronômetro está parado.
   </div>
 
+  <div v-if="room.spectating" class="joining" data-test="spectating">
+    Você entrou no meio da partida: assista esta rodada e jogue a partir da próxima. Você começa com 0 pontos.
+  </div>
+
   <section v-if="r" class="panel">
     <div class="meta">
       <span v-if="r.source === 'master'" class="tag master">Pergunta de {{ room.playerName(r.masterId) }}</span>
@@ -38,7 +42,7 @@ const goal = computed(() => {
     <template v-if="r.phase !== 'writing'">
       <p class="worth">
         <template v-if="r.phase === 'choosing' || r.phase === 'guessing'">
-          Acertar agora vale: <b>{{ room.hiddenCount }}</b> pts
+          Acertar agora vale: <b data-test="worth">{{ room.worth }}</b> {{ room.worth === 1 ? 'pt' : 'pts' }}
         </template>
         <template v-else>{{ r.wordCount }} palavras</template>
       </p>
@@ -81,6 +85,15 @@ const goal = computed(() => {
   color: var(--ink);
   font-weight: 700;
   font-size: 14px;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+.joining {
+  background: var(--bg3);
+  border-left: 4px solid var(--gold);
+  font-size: 14px;
+  line-height: 1.4;
   border-radius: 12px;
   padding: 10px 14px;
   margin-bottom: 12px;

@@ -81,9 +81,10 @@ describe('lobby', () => {
     expect(engine.start(room, ids[0]!)).toMatchObject({ ok: false, code: 'NOT_ENOUGH_PLAYERS' });
   });
 
-  it('não aceita entrada nova depois que a partida começou, mas aceita reconexão', () => {
+  it('com entrada no meio desligada, recusa novos depois do início, mas aceita reconexão', () => {
     const { engine } = setup();
     const { room, ids } = roomWith(engine);
+    ok(engine.updateConfig(room, ids[0]!, { lateJoin: false }));
     ok(engine.start(room, ids[0]!));
     expect(engine.join(room, { name: 'Davi' })).toMatchObject({ ok: false, code: 'GAME_STARTED' });
 
@@ -140,7 +141,7 @@ describe('modo Banco', () => {
     ok(engine.openWord(room, ids[1]!, 1));
     const answer = round(room).answers[0]!;
     ok(engine.guess(room, ids[1]!, answer));
-    expect(room.players[1]!.score).toBe(total - 2);
+    expect(room.players[1]!.score).toBe(total - 1); // 2 abertas: escondidas + 1
     expect(round(room).hit?.playerId).toBe(ids[1]);
   });
 
@@ -151,7 +152,7 @@ describe('modo Banco', () => {
 
     ok(engine.tryBonus(room, ids[0]!, round(room).question));
     expect(round(room).hit?.bonus).toBe('ok');
-    expect(room.players[0]!.score).toBe(round(room).words.length - 1 + 1);
+    expect(room.players[0]!.score).toBe(round(room).words.length + 1); // 1 aberta: vale o tamanho + bônus
     expect(round(room).phase).toBe('revealed');
   });
 
@@ -167,7 +168,7 @@ describe('modo Banco', () => {
     const p = r.turnPlayerId!;
     ok(engine.openWord(room, p, r.words.length - 2));
     ok(engine.guess(room, p, r.answers[0]!));
-    expect(r.hit?.points).toBe(1);
+    expect(r.hit?.points).toBe(2); // 1 escondida + 1
     expect(r.hit?.bonusAllowed).toBe(false);
     expect(r.phase).toBe('revealed');
   });
@@ -184,7 +185,7 @@ describe('modo Banco', () => {
     ok(engine.guess(room, p, 'outro erro'));
     expect(r.turnPlayerId).not.toBe(p);
     ok(engine.guess(room, r.turnPlayerId!, r.answers[0]!));
-    expect(r.hit?.points).toBe(0);
+    expect(r.hit?.points).toBe(1); // tudo aberto ainda vale 1
     expect(r.phase).toBe('revealed');
   });
 
@@ -193,7 +194,7 @@ describe('modo Banco', () => {
     ok(engine.guess(room, ids[0]!, 'errado'));
     ok(engine.openWord(room, ids[1]!, 1));
     ok(engine.guess(room, ids[1]!, 'veiculo'));
-    const points = round(room).words.length - 2;
+    const points = round(room).words.length - 1;
 
     expect(engine.judge(room, ids[2]!, true)).toMatchObject({ ok: false, code: 'NOT_HOST' });
     ok(engine.judge(room, ids[0]!, true));
@@ -279,7 +280,7 @@ describe('modo Mestre', () => {
     ok(engine.judge(room, ids[0]!, true));
 
     const words = round(room).words.length; // 7 palavras, 2 abertas
-    expect(room.players[2]!.score).toBe(words - 2);
+    expect(room.players[2]!.score).toBe(words - 1);
     expect(round(room).hit?.masterPoints).toBe(1); // metade de 2 abertas
     expect(room.players[0]!.score).toBe(1);
   });
@@ -448,12 +449,46 @@ describe('votação para pular a pergunta', () => {
     return { engine, room, ids, r };
   }
 
-  it('só abre com todas as palavras à mostra', () => {
+  it('pode ser proposta a qualquer momento da vez, mesmo sem nada aberto', () => {
     const { engine } = setup();
     const { room, ids } = roomWith(engine);
     ok(engine.start(room, ids[0]!));
+    const r = round(room);
+    expect(r.phase).toBe('choosing');
+    expect(engine.skipVoteAvailable(room)).toBe(true);
+    ok(engine.startSkipVote(room, ids[2]!));
+    ok(engine.voteSkip(room, ids[0]!, true));
+    ok(engine.voteSkip(room, ids[1]!, true));
+    expect(r.skipped).toBe(true);
+    expect(r.phase).toBe('revealed');
+    expect(room.chat.some((m) => m.text.includes(`Pergunta: “${r.question}?”`))).toBe(true);
+  });
+
+  it('não dá para propor durante julgamento, ponto extra ou fim de rodada', () => {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine);
+    ok(engine.start(room, ids[0]!));
+    ok(engine.openWord(room, ids[0]!, 0));
+    ok(engine.guess(room, ids[0]!, round(room).answers[0]!));
+    expect(round(room).phase).toBe('bonus');
     expect(engine.skipVoteAvailable(room)).toBe(false);
-    expect(engine.startSkipVote(room, ids[0]!)).toMatchObject({ ok: false, code: 'WRONG_PHASE' });
+    expect(engine.startSkipVote(room, ids[1]!)).toMatchObject({ ok: false, code: 'WRONG_PHASE' });
+  });
+
+  it('recusa no começo da rodada: nova votação só depois de uma volta', () => {
+    const { engine } = setup();
+    const { room, ids } = roomWith(engine);
+    ok(engine.start(room, ids[0]!));
+    const r = round(room);
+    ok(engine.startSkipVote(room, ids[1]!));
+    ok(engine.voteSkip(room, ids[0]!, false));
+    for (let k = 0; k < 3; k++) {
+      expect(engine.skipVoteAvailable(room)).toBe(false);
+      const p = r.turnPlayerId!;
+      ok(engine.openWord(room, p, k));
+      ok(engine.guess(room, p, `erro ${k}`));
+    }
+    expect(engine.skipVoteAvailable(room)).toBe(true);
   });
 
   it('todos aceitam: pula sem ninguém pontuar e mostra a pergunta', () => {
@@ -526,6 +561,82 @@ describe('votação para pular a pergunta', () => {
     expect(r.skipVote?.voters).toEqual([ids[1], ids[2]]);
     engine.setConnected(room, ids[2]!, false); // Caio cai: só sobra o voto da Bia, que já aceitou
     expect(r.phase).toBe('revealed');
+  });
+});
+
+/** Quem está na vez abre a próxima palavra escondida (se houver) e erra o chute. */
+function passTurn(engine: GameEngine, room: Room, k: number): string {
+  const r = room.round!;
+  const p = r.turnPlayerId!;
+  const idx = r.words.findIndex((_, i) => !r.revealed.includes(i));
+  if (r.phase === 'choosing' && idx >= 0) ok(engine.openWord(room, p, idx));
+  ok(engine.guess(room, p, `erro ${k}`));
+  return p;
+}
+
+describe('entrada no meio da partida', () => {
+  function playing() {
+    const { engine, advance } = setup();
+    const { room, ids } = roomWith(engine);
+    ok(engine.updateConfig(room, ids[0]!, { bonusEnabled: false }));
+    ok(engine.start(room, ids[0]!));
+    return { engine, advance, room, ids };
+  }
+
+  it('entra com 0 pontos, só assiste a rodada atual e joga a partir da próxima', () => {
+    const { engine, room, ids } = playing();
+    ok(engine.openWord(room, ids[0]!, 0));
+    ok(engine.guess(room, ids[0]!, round(room).answers[0]!));
+    expect(room.players[0]!.score).toBeGreaterThan(0);
+    ok(engine.nextRound(room, ids[0]!));
+
+    const davi = ok(engine.join(room, { name: 'Davi' })).player;
+    expect(davi.score).toBe(0);
+    expect(davi.spectating).toBe(true);
+    expect(room.chat.at(-1)?.text).toContain('Davi entrou na partida');
+
+    // Na rodada atual, a vez nunca chega nele e ele não vota para pular
+    const r = round(room);
+    for (let k = 0; k < 4; k++) {
+      expect(r.turnPlayerId).not.toBe(davi.id);
+      passTurn(engine, room, k);
+    }
+    expect(engine.openWord(room, davi.id, 0)).toMatchObject({ ok: false, code: 'NOT_YOUR_TURN' });
+    expect(engine.startSkipVote(room, davi.id)).toMatchObject({ ok: false, code: 'NOT_YOUR_TURN' });
+    ok(engine.openWord(room, r.turnPlayerId!, r.revealed.length));
+    ok(engine.guess(room, r.turnPlayerId!, r.answers[0]!));
+
+    // Próxima rodada: já joga, no fim da fila
+    ok(engine.nextRound(room, ids[0]!));
+    expect(davi.spectating).toBeUndefined();
+    const seen = new Set<string>();
+    for (let k = 0; k < 4; k++) seen.add(passTurn(engine, room, k));
+    expect(seen.has(davi.id)).toBe(true);
+  });
+
+  it('respeita o limite de jogadores', () => {
+    const { engine, room } = playing();
+    for (const n of ['D', 'E', 'F', 'G', 'H']) ok(engine.join(room, { name: n }));
+    expect(engine.join(room, { name: 'I' })).toMatchObject({ ok: false, code: 'ROOM_FULL' });
+  });
+
+  it('partida pausada por falta de gente: quem chega já entra na rodada e a partida retoma', () => {
+    const { engine, room, ids } = playing();
+    engine.setConnected(room, ids[1]!, false);
+    engine.setConnected(room, ids[2]!, false);
+    expect(room.paused).toBeDefined();
+    const davi = ok(engine.join(room, { name: 'Davi' })).player;
+    expect(davi.spectating).toBeUndefined();
+    expect(room.paused).toBeUndefined();
+  });
+
+  it('jogar de novo: quem entrou no meio vira jogador normal', () => {
+    const { engine, room, ids } = playing();
+    const davi = ok(engine.join(room, { name: 'Davi' })).player;
+    ok(engine.endGame(room, ids[0]!));
+    ok(engine.restart(room, ids[0]!));
+    expect(davi.spectating).toBeUndefined();
+    expect(room.players).toHaveLength(4);
   });
 });
 

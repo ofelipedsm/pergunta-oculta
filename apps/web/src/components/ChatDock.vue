@@ -4,8 +4,13 @@ import { LIMITS } from '@po/shared'
 import { useRoomStore } from '@/stores/room'
 
 /**
- * Chat da sala. No computador fica fixo à direita; no celular abre por um botão flutuante.
- * Mostra as mensagens dos jogadores e as automáticas do jogo (vez, chutes, acertos).
+ * Chat da sala, com as mensagens automáticas do jogo (vez, chutes, acertos).
+ *
+ * - Computador (≥ 1100 px): fixo à direita.
+ * - Celular: sempre aberto embaixo, ocupando o espaço que sobra da tela; as mensagens rolam por dentro.
+ *   O botão de expandir abre em tela cheia. Ao tocar no campo de mensagem, o chat cresce para a área
+ *   visível acima do teclado e, quando o teclado fecha, volta ao tamanho compacto.
+ * O campo do chat é discreto de propósito: o campo de destaque da tela é sempre o do chute.
  */
 const room = useRoomStore()
 const QUICK = ['😂', '👏', '🤔', '😱', '🔥']
@@ -18,51 +23,105 @@ const list = ref<HTMLElement | null>(null)
 const input = ref<HTMLInputElement | null>(null)
 
 const wide = ref(false)
-const open = ref(false)
-const visible = computed(() => wide.value || open.value)
-const lastSeen = ref(0)
+/** Celular: chat em tela cheia (pelo botão ou digitando). */
+const expanded = ref(false)
+/** Expandiu porque a pessoa tocou no campo: fecha sozinho quando o teclado some. */
+const byTyping = ref(false)
+const typing = ref(false)
+
+/** Área visível de verdade (descontando o teclado no iPhone). */
+const vv = ref({ top: 0, height: 0 })
+function onViewport() {
+  const v = window.visualViewport
+  vv.value = { top: v?.offsetTop ?? 0, height: v?.height ?? window.innerHeight }
+  if (typing.value) void scrollToEnd(true)
+}
 
 let mq: MediaQueryList | undefined
-const onMq = () => (wide.value = !!mq?.matches)
+const onMq = () => {
+  wide.value = !!mq?.matches
+  if (wide.value) expanded.value = false
+}
 onMounted(() => {
   mq = window.matchMedia('(min-width: 1100px)')
   onMq()
   mq.addEventListener('change', onMq)
-  lastSeen.value = messages.value.at(-1)?.id ?? 0
-  scrollToEnd(true)
+  window.visualViewport?.addEventListener('resize', onViewport)
+  window.visualViewport?.addEventListener('scroll', onViewport)
+  onViewport()
+  void scrollToEnd(true)
 })
-onBeforeUnmount(() => mq?.removeEventListener('change', onMq))
+onBeforeUnmount(() => {
+  mq?.removeEventListener('change', onMq)
+  window.visualViewport?.removeEventListener('resize', onViewport)
+  window.visualViewport?.removeEventListener('scroll', onViewport)
+})
 
-/** Só mensagens de outros jogadores contam como não lidas; as automáticas não. */
-const unread = computed(
-  () => messages.value.filter((m) => m.id > lastSeen.value && m.kind === 'user' && m.playerId !== meId.value).length,
+const sheetStyle = computed(() =>
+  !wide.value && expanded.value && typing.value
+    ? { top: `${vv.value.top}px`, height: `${vv.value.height}px`, bottom: 'auto' }
+    : undefined,
 )
 
-function nearBottom() {
+/** A pessoa está vendo o fim da conversa? Se rolou para cima para ler, não puxamos de volta. */
+const stick = ref(true)
+function onScroll() {
   const el = list.value
-  return !el || el.scrollHeight - el.scrollTop - el.clientHeight < 80
+  if (el) stick.value = el.scrollHeight - el.scrollTop - el.clientHeight < 40
 }
 
 async function scrollToEnd(force = false) {
-  if (!force && !nearBottom()) return
+  if (!force && !stick.value) return
   await nextTick()
   if (list.value) list.value.scrollTop = list.value.scrollHeight
+  stick.value = true
 }
+
+// O chat muda de tamanho quando a tela do jogo cresce ou encolhe: continua mostrando o fim.
+let ro: ResizeObserver | undefined
+watch(list, (el, _, onCleanup) => {
+  if (!el || typeof ResizeObserver === 'undefined') return
+  ro = new ResizeObserver(() => {
+    if (stick.value) el.scrollTop = el.scrollHeight
+  })
+  ro.observe(el)
+  onCleanup(() => ro?.disconnect())
+})
 
 watch(
   () => messages.value.at(-1)?.id,
-  (id) => {
-    if (visible.value && id) lastSeen.value = id
-    void scrollToEnd()
-  },
+  () => void scrollToEnd(),
 )
+watch(expanded, () => void scrollToEnd(true))
 
-watch(visible, (v) => {
-  if (!v) return
-  lastSeen.value = messages.value.at(-1)?.id ?? 0
+function onFocus() {
+  typing.value = true
+  if (wide.value) return
+  if (!expanded.value) {
+    expanded.value = true
+    byTyping.value = true
+  }
   void scrollToEnd(true)
-  if (!wide.value) void nextTick(() => input.value?.focus())
-})
+}
+
+function onBlur() {
+  typing.value = false
+  if (byTyping.value) {
+    byTyping.value = false
+    expanded.value = false
+  }
+}
+
+function expand() {
+  expanded.value = true
+  byTyping.value = false
+}
+
+function collapse() {
+  expanded.value = false
+  byTyping.value = false
+  input.value?.blur()
+}
 
 async function send(value = text.value) {
   const v = value.trim()
@@ -80,100 +139,130 @@ function time(at: number) {
 </script>
 
 <template>
-  <button
-    v-if="!wide && !open"
-    class="fab"
-    data-test="chat-open"
-    aria-label="Abrir o chat"
-    @click="open = true"
-  >
-    Chat
-    <span v-if="unread" class="badge" data-test="chat-unread">{{ unread }}</span>
-  </button>
+  <div class="slot" :class="{ wide }">
+    <aside
+      class="chat"
+      :class="wide ? 'side' : expanded ? 'sheet' : 'inline'"
+      :style="sheetStyle"
+      data-test="chat"
+      aria-label="Chat da sala"
+    >
+      <header>
+        <b>Chat da sala</b>
+        <template v-if="!wide">
+          <button v-if="!expanded" class="icon" data-test="chat-expand" aria-label="Expandir o chat" @click="expand">
+            Expandir ⤢
+          </button>
+          <button
+            v-else
+            class="icon close"
+            data-test="chat-collapse"
+            aria-label="Recolher o chat"
+            @pointerdown.prevent
+            @click="collapse"
+          >
+            ×
+          </button>
+        </template>
+      </header>
 
-  <aside v-if="visible" class="chat" :class="{ sheet: !wide }" data-test="chat" aria-label="Chat da sala">
-    <header>
-      <b>Chat da sala</b>
-      <button v-if="!wide" class="close" aria-label="Fechar o chat" @click="open = false">×</button>
-    </header>
-
-    <div ref="list" class="list" aria-live="polite">
-      <p v-if="!messages.length" class="empty">Ninguém falou nada ainda. Combinem as regras por aqui!</p>
-      <template v-for="m in messages" :key="m.id">
-        <div v-if="m.kind === 'system'" class="sys" :class="m.tone" data-test="chat-system">{{ m.text }}</div>
-        <div v-else class="msg" :class="{ mine: m.playerId === meId }" data-test="chat-user">
-          <div class="meta">
-            <span class="who" :style="{ color: room.playerColor(m.playerId) }">{{ room.playerName(m.playerId) }}</span>
-            <span class="at">{{ time(m.at) }}</span>
+      <div ref="list" class="list" aria-live="polite" @scroll.passive="onScroll">
+        <p v-if="!messages.length" class="empty">Ninguém falou nada ainda. Combinem as regras por aqui!</p>
+        <template v-for="m in messages" :key="m.id">
+          <div v-if="m.kind === 'system'" class="sys" :class="m.tone" data-test="chat-system">{{ m.text }}</div>
+          <div v-else class="msg" :class="{ mine: m.playerId === meId }" data-test="chat-user">
+            <div class="meta">
+              <span class="who" :style="{ color: room.playerColor(m.playerId) }">{{ room.playerName(m.playerId) }}</span>
+              <span class="at">{{ time(m.at) }}</span>
+            </div>
+            <div class="bubble">{{ m.text }}</div>
           </div>
-          <div class="bubble">{{ m.text }}</div>
-        </div>
-      </template>
-    </div>
+        </template>
+      </div>
 
-    <div class="quick">
-      <button v-for="q in QUICK" :key="q" class="emoji" :aria-label="`Enviar ${q}`" @click="send(q)">{{ q }}</button>
-    </div>
-    <form class="compose" @submit.prevent="send()">
-      <input
-        ref="input"
-        v-model="text"
-        class="textin"
-        :maxlength="LIMITS.chatMax"
-        placeholder="Mensagem para a sala…"
-        autocomplete="off"
-        data-test="chat-input"
-      />
-      <button class="btn" type="submit" :disabled="sending || !text.trim()" data-test="chat-send">Enviar</button>
-    </form>
-  </aside>
+      <div v-if="wide || expanded" class="quick">
+        <button
+          v-for="q in QUICK"
+          :key="q"
+          class="emoji"
+          :aria-label="`Enviar ${q}`"
+          @pointerdown.prevent
+          @click="send(q)"
+        >
+          {{ q }}
+        </button>
+      </div>
+      <form class="compose" @submit.prevent="send()">
+        <input
+          ref="input"
+          v-model="text"
+          class="chatin"
+          :maxlength="LIMITS.chatMax"
+          placeholder="Mensagem para a sala…"
+          autocomplete="off"
+          enterkeyhint="send"
+          data-test="chat-input"
+          @focus="onFocus"
+          @blur="onBlur"
+        />
+        <button
+          class="send"
+          type="submit"
+          :disabled="sending || !text.trim()"
+          aria-label="Enviar mensagem"
+          data-test="chat-send"
+          @pointerdown.prevent
+        >
+          Enviar
+        </button>
+      </form>
+    </aside>
+  </div>
 </template>
 
 <style scoped>
-.fab {
-  position: fixed;
-  right: 16px;
-  bottom: 18px;
-  z-index: 25;
-  border: none;
-  border-radius: 999px;
-  padding: 12px 18px;
-  background: var(--gold);
-  color: var(--ink);
-  font: 700 15px 'DM Sans';
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  cursor: pointer;
+/* No celular, o slot ocupa o resto da altura da tela; no computador, não ocupa nada. */
+.slot {
+  flex: 1 1 0;
+  min-height: 200px;
+  display: flex;
+  margin-top: 4px;
 }
-.badge {
-  display: inline-block;
-  min-width: 20px;
-  margin-left: 6px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: var(--bad);
-  color: var(--ink);
-  font-size: 12px;
+.slot.wide {
+  flex: none;
+  min-height: 0;
+  margin: 0;
 }
 
 .chat {
+  display: flex;
+  flex-direction: column;
+  background: #171a33;
+}
+.chat.inline {
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--bg3);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.chat.side {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
   width: 340px;
   z-index: 15;
-  display: flex;
-  flex-direction: column;
-  background: #171a33;
   border-left: 1px solid var(--bg3);
 }
 .chat.sheet {
-  top: auto;
+  position: fixed;
   left: 0;
-  width: auto;
-  height: 72vh;
+  right: 0;
+  bottom: 0;
+  height: 80vh;
+  height: 80dvh;
   z-index: 26;
-  border-left: none;
   border-top: 1px solid var(--bg3);
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
@@ -183,49 +272,60 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--bg3);
   font-family: Fraunces, serif;
+  font-size: 15px;
+}
+.side header,
+.sheet header {
+  padding: 12px 16px;
   font-size: 17px;
 }
-.close {
+.icon {
   background: none;
   border: none;
   color: var(--muted);
+  font: 600 13px 'DM Sans';
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.close {
   font-size: 26px;
   line-height: 1;
-  cursor: pointer;
 }
 
 .list {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 12px 14px;
+  overscroll-behavior: contain;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 .empty {
   color: var(--muted);
   font-size: 13px;
   text-align: center;
-  margin-top: 20px;
+  margin-top: 12px;
 }
+/* Mensagens do jogo: discretas, para não competir com a conversa. */
 .sys {
   align-self: center;
-  max-width: 92%;
+  max-width: 94%;
   text-align: center;
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 8px;
-  padding: 4px 10px;
+  padding: 1px 8px;
 }
 .sys.hit {
   color: var(--ok);
 }
 .sys.miss {
   color: var(--bad);
+  opacity: 0.85;
 }
 
 .msg {
@@ -251,15 +351,14 @@ header {
   display: inline-block;
   background: var(--bg3);
   border-radius: 12px;
-  padding: 7px 11px;
+  padding: 6px 10px;
   font-size: 14.5px;
   line-height: 1.35;
   word-break: break-word;
   text-align: left;
 }
 .mine .bubble {
-  background: var(--gold);
-  color: var(--ink);
+  background: #4a4f86;
 }
 
 .quick {
@@ -277,16 +376,37 @@ header {
 }
 .compose {
   display: flex;
-  gap: 8px;
-  padding: 10px 12px 14px;
+  gap: 6px;
+  padding: 8px 10px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
-.compose .textin {
+/* Campo discreto: menor e sem a borda dourada do campo de chute. */
+.chatin {
   flex: 1;
-  padding: 10px 12px;
-  font-size: 15px;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--bg3);
+  background: transparent;
+  color: #fff;
+  font: 500 16px 'DM Sans'; /* 16px evita o zoom automático do iPhone */
+  outline: none;
 }
-.compose .btn {
-  padding: 10px 14px;
-  font-size: 14px;
+.chatin:focus {
+  border-color: var(--muted);
+  background: #141833;
+}
+.send {
+  border: 1px solid var(--bg3);
+  background: var(--bg3);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0 14px;
+  font: 700 13px 'DM Sans';
+  cursor: pointer;
+}
+.send:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 </style>

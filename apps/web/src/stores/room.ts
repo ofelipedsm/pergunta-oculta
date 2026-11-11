@@ -43,6 +43,17 @@ export const useRoomStore = defineStore('room', () => {
   const isMyTurn = computed(() => !!round.value && round.value.turnPlayerId === me.value?.id)
   const isJudge = computed(() => !!state.value?.judgeId && state.value.judgeId === me.value?.id)
   const hiddenCount = computed(() => (round.value ? round.value.wordCount - round.value.revealed.length : 0))
+  /**
+   * Quanto vale acertar no próximo chute: palavras escondidas + 1.
+   * Escolhendo, o chute vem depois de abrir mais uma, então vale exatamente as escondidas de agora.
+   */
+  const worth = computed(() => {
+    const r = round.value
+    if (!r) return 0
+    return r.phase === 'choosing' ? Math.max(1, hiddenCount.value) : hiddenCount.value + 1
+  })
+  /** Entrei com a partida em andamento: só assisto até a próxima rodada. */
+  const spectating = computed(() => !!players.value.find((p) => p.id === me.value?.id)?.spectating)
 
   function playerName(id: string | undefined): string {
     return players.value.find((p) => p.id === id)?.name ?? 'Alguém'
@@ -178,6 +189,8 @@ export const useRoomStore = defineStore('room', () => {
     isMyTurn,
     isJudge,
     hiddenCount,
+    worth,
+    spectating,
     playerName,
     playerColor,
     pushToast,
